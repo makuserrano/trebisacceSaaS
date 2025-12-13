@@ -1,0 +1,52 @@
+.home-page {
+  position: relative;
+  min-height: 100vh;
+  background: #fffcf2;
+}
+
+.home-page .container {
+  position: relative;
+}
+
+.home-page .hero {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  padding: var(--s-5) 0 var(--s-4);
+  position: relative;
+  z-index: 1;
+}
+
+.home-page .hero__title {
+  letter-spacing: -0.01em;
+}
+
+.home-page .hero__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  padding: 0.45em 0.9em;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(204, 197, 185, 0.16);
+  color: var(--text);
+  font-weight: 600;
+  width: fit-content;
+}
+
+.home-page .hero__subtitle {
+  max-width: 640px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+.home-page .hero__actions {
+  margin-top: var(--s-2);
+}
+
+.hero__divider {
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
+  margin: var(--s-4) 0 var(--s-3);
+}
