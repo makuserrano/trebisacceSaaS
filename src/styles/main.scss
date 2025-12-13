@@ -1,41 +1,12 @@
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
+@import './tokens';
 @import './base';
 @import './components';
-
-:root {
-  --bg: #040813;
-  --panel: rgba(255, 255, 255, 0.03);
-  --panel-strong: rgba(255, 255, 255, 0.06);
-  --text: #e8edff;
-  --muted: #9eabc8;
-  --primary: #8fffa1;
-  --primary-strong: #4ce3c7;
-  --border: rgba(255, 255, 255, 0.1);
-  --shadow: 0 18px 70px rgba(0, 0, 0, 0.35);
-  --s-1: 6px;
-  --s-2: 12px;
-  --s-3: 18px;
-  --s-4: 24px;
-  --s-5: 32px;
-  --s-6: 48px;
-}
 
 *,
 *::before,
 *::after {
   box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  min-height: 100vh;
-  background: radial-gradient(120% 120% at 15% 20%, rgba(76, 227, 199, 0.12), transparent 35%),
-              radial-gradient(120% 120% at 80% 0%, rgba(143, 255, 161, 0.14), transparent 40%),
-              #040813;
-  color: var(--text);
-  font-family: 'Space Grotesk', 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
-  letter-spacing: 0.01em;
-  -webkit-font-smoothing: antialiased;
 }
 
 #root {
@@ -80,15 +51,14 @@ p {
   border-radius: 12px;
   border: 1px solid var(--border);
   color: var(--text);
-  background: var(--panel);
+  background: var(--surface);
   font-weight: 600;
   letter-spacing: 0.01em;
-  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease, background 140ms ease;
+  transition: transform 140ms ease, background-color 140ms ease, border-color 140ms ease, color 140ms ease;
 }
 
 .btn:hover {
-  border-color: var(--primary-strong);
-  background: var(--panel-strong);
+  border-color: var(--accent);
   transform: translateY(-1px);
 }
 
@@ -97,29 +67,29 @@ p {
 }
 
 .btn--primary {
-  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 60%, #2bc0d8 100%);
-  color: #052324;
-  border: none;
-  box-shadow: 0 10px 40px rgba(76, 227, 199, 0.3), 0 6px 16px rgba(0, 0, 0, 0.25);
+  background: var(--accent);
+  color: var(--bg);
+  border: 1px solid var(--accent);
 }
 
 .btn--primary:hover {
-  box-shadow: 0 12px 48px rgba(76, 227, 199, 0.4), 0 6px 20px rgba(0, 0, 0, 0.3);
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
 }
 
 .card {
   padding: var(--s-4);
   border-radius: 16px;
-  background: linear-gradient(160deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0)) var(--panel);
+  background: var(--surface);
   border: 1px solid var(--border);
-  box-shadow: var(--shadow);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: column;
   gap: var(--s-2);
 }
 
 .card__title {
-  color: #f1f5ff;
+  color: var(--text);
 }
 
 .card__text {

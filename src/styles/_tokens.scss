@@ -1,0 +1,51 @@
+// Paleta base (fuente de verdad de colores)
+// $palette-cream: tono claro para texto y realces sutiles.
+// $palette-sand: tono neutro para bordes y texto secundario.
+// $palette-stone: tono intermedio para superficies y contenedores.
+// $palette-ink: tono oscuro para el fondo principal.
+// $palette-accent: acento cálido para acciones primarias.
+$palette-cream: #fffcf2;
+$palette-sand: #ccc5b9;
+$palette-stone: #403d39;
+$palette-ink: #252422;
+$palette-accent: #eb5e28;
+
+// Tokens semánticos (dónde usarlos)
+// $color-bg: fondo de la página.
+// $color-surface: tarjetas, paneles y botones secundarios.
+// $color-border: líneas divisorias, bordes de inputs y contenedores.
+// $color-text: texto principal y titulares.
+// $color-muted: texto secundario y etiquetas.
+// $color-accent: botones primarios, enlaces activos y estados destacados.
+// $color-accent-hover: estado hover/focus de elementos de acento (se mantiene igual para un esquema reducido).
+$color-bg: $palette-cream;
+$color-surface: $palette-cream; // o $palette-sand si querés cards más marcadas
+$color-border: $palette-sand;
+$color-text: $palette-ink;
+$color-muted: $palette-stone;
+$color-accent: $palette-accent;
+$color-accent-hover: $palette-accent;
+
+// Escala de espacio
+$space-1: 6px;
+$space-2: 12px;
+$space-3: 18px;
+$space-4: 24px;
+$space-5: 32px;
+$space-6: 48px;
+
+:root {
+  --bg: #{$color-bg};
+  --surface: #{$color-surface};
+  --border: #{$color-border};
+  --text: #{$color-text};
+  --muted: #{$color-muted};
+  --accent: #{$color-accent};
+  --accent-hover: #{$color-accent-hover};
+  --s-1: #{$space-1};
+  --s-2: #{$space-2};
+  --s-3: #{$space-3};
+  --s-4: #{$space-4};
+  --s-5: #{$space-5};
+  --s-6: #{$space-6};
+}
