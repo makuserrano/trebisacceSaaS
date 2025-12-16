@@ -4,11 +4,13 @@
 // $palette-stone: tono intermedio para superficies y contenedores.
 // $palette-ink: tono oscuro para el fondo principal.
 // $palette-accent: acento cálido para acciones primarias.
+// $palette-white: blanco puro para fondos neutros.
 $palette-cream: #fffcf2;
 $palette-sand: #ccc5b9;
 $palette-stone: #403d39;
 $palette-ink: #252422;
 $palette-accent: #eb5e28;
+$palette-white: #ffffff;
 
 // Tokens semánticos (dónde usarlos)
 // $color-bg: fondo de la página.
@@ -18,11 +20,11 @@ $palette-accent: #eb5e28;
 // $color-muted: texto secundario y etiquetas.
 // $color-accent: botones primarios, enlaces activos y estados destacados.
 // $color-accent-hover: estado hover/focus de elementos de acento (se mantiene igual para un esquema reducido).
-$color-bg: $palette-cream;
-$color-surface: $palette-cream; // o $palette-sand si querés cards más marcadas
+$color-bg: $palette-ink;
+$color-surface: $palette-stone;
 $color-border: $palette-sand;
-$color-text: $palette-ink;
-$color-muted: $palette-stone;
+$color-text: $palette-cream;
+$color-muted: $palette-sand;
 $color-accent: $palette-accent;
 $color-accent-hover: $palette-accent;
 

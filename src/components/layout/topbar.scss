@@ -1,7 +1,11 @@
 .topbar {
   width: 100%;
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
+  background: var(--accent);
+  border-bottom: 1px solid rgba(255, 252, 242, 0.25); /* línea sutil usando el tono claro */
+  color: var(--text);
+  position: sticky;
+  top: 0;
+  z-index: 20;
 }
 
 .topbar__inner {
@@ -10,41 +14,60 @@
   padding: var(--s-2) var(--s-3);
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: var(--s-4);
 }
 
 .topbar__brand {
   font-weight: 700;
   letter-spacing: 0.02em;
+  color: var(--text);
 }
 
-.topbar__menu {
+.topbar__nav {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 40px;
-  padding: 0;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  cursor: pointer;
+  gap: var(--s-3);
+  margin-left: auto;
 }
 
-.topbar__menu:hover {
-  border-color: var(--accent);
+.topbar__link {
+  color: var(--text);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  padding: 8px 0;
+  border-bottom: 2px solid transparent;
+  transition: border-color 0.15s ease, opacity 0.15s ease;
+  opacity: 0.92;
 }
 
-.topbar__icon {
+.topbar__link:hover {
+  border-color: var(--text);
+  opacity: 1;
+}
+
+.topbar__actions {
   display: inline-flex;
-  flex-direction: column;
-  gap: 6px;
+  align-items: center;
+  margin-left: var(--s-3);
 }
 
-.topbar__icon span {
-  display: block;
-  width: 18px;
-  height: 2px;
-  background: var(--text);
-  border-radius: 999px;
+.topbar__cta {
+  padding: 0.65em 1.1em;
+  border-radius: 12px;
+  border: 1px solid var(--bg);
+  background: var(--bg);
+  color: var(--accent);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: transform 140ms ease, opacity 140ms ease, border-color 140ms ease;
+}
+
+.topbar__cta:hover {
+  transform: translateY(-1px);
+  opacity: 0.95;
+}
+
+.topbar__cta:active {
+  transform: translateY(0);
 }

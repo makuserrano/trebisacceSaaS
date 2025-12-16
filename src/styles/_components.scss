@@ -2,10 +2,12 @@
   margin: 0 0 var(--s-2);
   font-size: 16px;
   font-weight: 650;
+  color: var(--bg);
 }
 
 .card__text {
   margin: 0;
-  color: var(--muted);
+  color: inherit;
+  opacity: 0.85;
   line-height: 1.5;
 }
