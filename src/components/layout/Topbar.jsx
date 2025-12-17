@@ -14,16 +14,16 @@ export default function Topbar() {
             Funcionalidades
           </a>
           <a className="topbar__link" href="#audiencia">
-            Para quién es
-          </a>
-          <a className="topbar__link" href="#precios">
-            Precios
+            Para quién
           </a>
         </nav>
 
         <div className="topbar__actions">
+          <a className="topbar__login" href="#login">
+            Iniciar sesión
+          </a>
           <button className="topbar__cta" type="button">
-            Probar demo
+            Registrarse
           </button>
         </div>
       </div>

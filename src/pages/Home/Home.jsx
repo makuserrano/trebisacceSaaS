@@ -4,33 +4,61 @@ import Footer from "../../components/layout/Footer";
 export default function Home() {
   return (
     <div className="page home-page">
+      <div className="bg-particles" aria-hidden="true">
+        <span className="p p1 size-lg color-accent blur"></span>
+        <span className="p p2 size-md color-text"></span>
+        <span className="p p3 size-sm color-muted blur-soft"></span>
+        <span className="p p4 size-md color-text"></span>
+        <span className="p p5 size-sm color-muted"></span>
+        <span className="p p6 size-md color-accent-soft blur-soft"></span>
+        <span className="p p7 size-xs color-text"></span>
+        <span className="p p8 size-md color-muted blur-soft"></span>
+        <span className="p p9 size-sm color-text"></span>
+        <span className="p p10 size-md color-accent-soft"></span>
+        <span className="p p11 size-lg color-text blur-soft"></span>
+        <span className="p p12 size-xs color-muted"></span>
+        <span className="p p13 size-md color-accent-soft blur"></span>
+        <span className="p p14 size-sm color-text"></span>
+        <span className="p p15 size-md color-muted blur-soft"></span>
+        <span className="p p16 size-sm color-accent-soft"></span>
+        <span className="p p17 size-lg color-accent blur"></span>
+        <span className="p p18 size-xs color-text"></span>
+        <span className="p p19 size-md color-muted blur-soft"></span>
+        <span className="p p20 size-sm color-accent-soft"></span>
+        <span className="p p21 size-md color-accent-soft"></span>
+        <span className="p p22 size-xs color-muted"></span>
+        <span className="p p23 size-sm color-accent-soft"></span>
+        <span className="p p24 size-md color-accent-soft blur-soft"></span>
+        <span className="p p25 size-lg color-accent-soft"></span>
+        <span className="p p26 size-xs color-text"></span>
+        <span className="p p27 size-md color-accent-soft blur"></span>
+        <span className="p p28 size-sm color-muted"></span>
+        <span className="p p29 size-sm color-text"></span>
+        <span className="p p30 size-lg color-accent-soft blur-soft"></span>
+      </div>
       <div className="container">
         <section className="hero home-hero">
           <div className="home-hero__grid">
             <div className="home-hero__content">
               <p className="home-hero__eyebrow t-small t-muted">
-                Gestión y análisis para PyMEs
+                Gestión empresarial inteligente
               </p>
 
               <h1 className="home-hero__title t-title">
-                Opera con claridad. Decide con evidencia.
+                Opera con claridad.
+                <br />
+                Decide con evidencia.
               </h1>
 
               <p className="home-hero__subtitle t-body t-muted">
-                Trebisacce reúne operación, finanzas y reporting en un solo lugar. Un
-                espacio sin adornos para ver la foto completa y tomar decisiones con
-                datos, no con suposiciones.
+                Software de gestión y análisis para PyMEs que transforma datos operativos
+                en decisiones accionables.
               </p>
 
               <div className="home-hero__highlights">
-                <div className="home-hero__highlight">Panel único de operación</div>
-                <div className="home-hero__highlight">Trazabilidad de decisiones</div>
-                <div className="home-hero__highlight">Indicadores accionables</div>
-              </div>
-
-              <div className="hero__actions">
-                <button className="btn btn--primary">Probar demo</button>
-                <button className="btn">Hablar con nosotros</button>
+                <div className="home-hero__highlight">Sin instalación</div>
+                <div className="home-hero__highlight">Interfaz intuitiva</div>
+                <div className="home-hero__highlight">Reportes en tiempo real</div>
               </div>
             </div>
 
@@ -92,6 +120,21 @@ export default function Home() {
               <p className="process__text t-body t-muted">
                 Conecta indicadores clave y detecta desviaciones a tiempo.
               </p>
+            </div>
+          </div>
+
+          <div className="metrics-card">
+            <div className="metric">
+              <span className="metric__value metric__value--accent">48%</span>
+              <span className="metric__label t-small t-muted">Tiempo de respuesta más ágil</span>
+            </div>
+            <div className="metric">
+              <span className="metric__value">+27%</span>
+              <span className="metric__label t-small t-muted">Mejora en previsión de caja</span>
+            </div>
+            <div className="metric">
+              <span className="metric__value">12</span>
+              <span className="metric__label t-small t-muted">Áreas alineadas con trazabilidad</span>
             </div>
           </div>
         </section>
@@ -162,17 +205,17 @@ export default function Home() {
             <div className="audience__col">
               <h3 className="audience__title t-card">Para quién es</h3>
               <ul className="audience__list t-body t-muted">
-                <li>Dueños y administradores que buscan control sin hojas sueltas.</li>
-                <li>Equipos que necesitan seguimiento de procesos y decisiones.</li>
-                <li>PyMEs que ya manejan ingresos recurrentes y quieren escalar.</li>
+                <li><span className="audience__badge audience__badge--yes">✓</span>Dueños y administradores que buscan control sin hojas sueltas.</li>
+                <li><span className="audience__badge audience__badge--yes">✓</span>Equipos que necesitan seguimiento de procesos y decisiones.</li>
+                <li><span className="audience__badge audience__badge--yes">✓</span>PyMEs que ya manejan ingresos recurrentes y quieren escalar.</li>
               </ul>
             </div>
             <div className="audience__col">
               <h3 className="audience__title t-card">Para quién no es</h3>
               <ul className="audience__list t-body t-muted">
-                <li>Negocios sin procesos definidos o sin responsable operativo.</li>
-                <li>Equipos que prefieren suites genéricas de ofimática.</li>
-                <li>Organizaciones que no comparten datos básicos de operación.</li>
+                <li><span className="audience__badge audience__badge--no">✕</span>Negocios sin procesos definidos o sin responsable operativo.</li>
+                <li><span className="audience__badge audience__badge--no">✕</span>Equipos que prefieren suites genéricas de ofimática.</li>
+                <li><span className="audience__badge audience__badge--no">✕</span>Organizaciones que no comparten datos básicos de operación.</li>
               </ul>
             </div>
           </div>
@@ -182,7 +225,9 @@ export default function Home() {
           <div className="cta__content">
             <div>
               <p className="cta__eyebrow t-small t-muted">Planes claros, sin capas ocultas</p>
-              <h2 className="cta__title t-section">Listo para probar Trebisacce</h2>
+              <h2 className="cta__title t-section">
+                Listo para probar <span className="cta__accent">Trebisacce</span>
+              </h2>
               <p className="cta__subtitle t-body t-muted">
                 Te guiamos en la configuración inicial y en las métricas clave para tu
                 negocio. La demo es guiada y sin compromiso.

@@ -2,7 +2,6 @@
 @import './tokens';
 @import './base';
 @import './typography';
-@import './components';
 
 *,
 *::before,
@@ -76,24 +75,4 @@ p {
 .btn--primary:hover {
   background: var(--accent-hover);
   border-color: var(--accent-hover);
-}
-
-.card {
-  padding: var(--s-4);
-  border-radius: 16px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2);
-  display: flex;
-  flex-direction: column;
-  gap: var(--s-2);
-  color: var(--bg);
-}
-
-.card__title {
-  color: var(--text);
-}
-
-.card__text {
-  color: var(--muted);
 }
