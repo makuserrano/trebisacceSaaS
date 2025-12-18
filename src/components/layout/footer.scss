@@ -1,7 +1,26 @@
 .footer {
   width: 100%;
   background: var(--bg);
-  border-top: 1px solid var(--border);
+  position: relative;
+}
+
+.footer::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 252, 242, 0.04) 12%,
+    rgba(255, 252, 242, 0.14) 50%,
+    rgba(255, 252, 242, 0.04) 88%,
+    transparent 100%
+  );
+  opacity: 0.8;
+  pointer-events: none;
 }
 
 .footer__inner {
