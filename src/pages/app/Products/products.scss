@@ -1,0 +1,11 @@
+.products__filters {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.products__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: center;
+}

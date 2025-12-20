@@ -1,0 +1,131 @@
+.app-sidebar {
+  width: 300px;
+  background: color-mix(in srgb, var(--surface) 60%, var(--bg));
+  min-height: 100vh;
+  padding: 20px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  position: sticky;
+  top: 0;
+  transition: transform 0.3s ease;
+  z-index: 8;
+}
+
+.app-sidebar__brand {
+  padding: 6px 10px;
+  color: var(--accent);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.app-sidebar__nav {
+  flex: 1;
+}
+
+.app-sidebar__root {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.app-sidebar__item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 12px;
+  border-radius: 12px;
+  color: var(--text);
+  border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  font-size: 15px;
+  font-weight: 600;
+  transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+}
+
+.app-sidebar__item:hover {
+  border-color: color-mix(in srgb, var(--border) 75%, transparent);
+  background: color-mix(in srgb, var(--surface) 75%, var(--bg));
+}
+
+.app-sidebar__item.is-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.app-sidebar__item.is-open {
+  border-color: color-mix(in srgb, var(--border) 75%, transparent);
+  background: color-mix(in srgb, var(--surface) 75%, var(--bg));
+}
+
+.app-sidebar__item-start {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.app-sidebar__icon {
+  width: 18px;
+  height: 18px;
+  color: currentColor;
+}
+
+.app-sidebar__chevron {
+  width: 16px;
+  height: 16px;
+  color: currentColor;
+  transition: transform 0.18s ease;
+}
+
+.app-sidebar__chevron.is-open {
+  transform: rotate(90deg);
+}
+
+.app-sidebar__children {
+  list-style: none;
+  padding: 4px 0 4px 12px;
+  margin: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.app-sidebar__child {
+  display: block;
+  padding: 10px 12px;
+  border-radius: 10px;
+  color: var(--muted);
+  font-size: 15px;
+  border: 1px solid transparent;
+  transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+}
+
+.app-sidebar__child:hover {
+  border-color: color-mix(in srgb, var(--border) 70%, transparent);
+  color: var(--text);
+}
+
+.app-sidebar__child.is-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+@media (max-width: 960px) {
+  .app-sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    width: min(82vw, 320px);
+    transform: translateX(-100%);
+    box-shadow: 0 12px 40px color-mix(in srgb, var(--bg) 55%, transparent);
+  }
+
+  .app-sidebar.is-open {
+    transform: translateX(0);
+  }
+}

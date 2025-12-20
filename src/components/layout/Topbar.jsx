@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import "./topbar.scss";
 
 export default function Topbar() {
@@ -25,12 +26,12 @@ export default function Topbar() {
         </nav>
 
         <div className="topbar__actions">
-          <a className="topbar__login" href="#login">
+          <Link className="topbar__login" to="/app">
             Iniciar sesión
-          </a>
-          <button className="topbar__cta" type="button">
+          </Link>
+          <Link className="topbar__cta" to="/app">
             Registrarse
-          </button>
+          </Link>
         </div>
 
         <button
@@ -72,20 +73,12 @@ export default function Topbar() {
 
         <span className="topbar__divider" aria-hidden="true" />
 
-        <a
-          className="topbar__dropdown-link topbar__dropdown-link--login"
-          href="#login"
-          onClick={closeMenu}
-        >
+        <Link className="topbar__dropdown-link topbar__dropdown-link--login" to="/app" onClick={closeMenu}>
           Iniciar sesión
-        </a>
-        <a
-          className="topbar__dropdown-cta"
-          href="#registro"
-          onClick={closeMenu}
-        >
+        </Link>
+        <Link className="topbar__dropdown-cta" to="/app" onClick={closeMenu}>
           Registrarse
-        </a>
+        </Link>
       </nav>
     </header>
   );
