@@ -1,28 +1,30 @@
 export default function DataTable({ columns, rows }) {
   return (
     <div className="app-surface">
-      <table className="data-table">
-        <thead>
-          <tr>
-            {columns.map((col) => (
-              <th key={col.key} className={alignClass(col.align)}>
-                {col.label}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row, index) => (
-            <tr key={row.id ?? index}>
-              {row.cells.map((cell, cellIndex) => (
-                <td key={cellIndex} className={alignClass(columns[cellIndex]?.align)}>
-                  {cell}
-                </td>
+      <div className="table-wrap">
+        <table className="data-table">
+          <thead>
+            <tr>
+              {columns.map((col) => (
+                <th key={col.key} className={alignClass(col.align)}>
+                  {col.label}
+                </th>
               ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {rows.map((row, index) => (
+              <tr key={row.id ?? index}>
+                {row.cells.map((cell, cellIndex) => (
+                  <td key={cellIndex} className={alignClass(columns[cellIndex]?.align)}>
+                    {cell}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

@@ -4,6 +4,7 @@
   min-height: 100vh;
   background: var(--bg);
   color: var(--text);
+  min-width: 0;
 }
 
 .app-shell__main {
@@ -11,12 +12,15 @@
   flex-direction: column;
   min-height: 100vh;
   background: var(--bg);
+  min-width: 0;
+  overflow-x: hidden;
 }
 
 .app-shell__content {
   padding: 32px;
   flex: 1;
   position: relative;
+  min-width: 0;
 }
 
 .app-shell__menu {
@@ -65,5 +69,11 @@
 
   .app-shell.sidebar-open .app-sidebar {
     transform: translateX(0);
+  }
+}
+
+@media (max-width: 640px) {
+  .app-shell__content {
+    padding: 20px 14px;
   }
 }

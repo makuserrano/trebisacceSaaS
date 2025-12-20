@@ -1,18 +1,25 @@
 .app-shell {
   background: var(--bg);
   color: var(--text);
+  min-width: 0;
 }
 
 .app-container {
   display: flex;
   flex-direction: column;
   gap: 24px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .app-page {
   display: flex;
   flex-direction: column;
   gap: 20px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
 }
 
 .app-surface {
@@ -20,6 +27,9 @@
   border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
   border-radius: 12px;
   box-shadow: 0 10px 26px color-mix(in srgb, var(--bg) 16%, transparent);
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .primary-button {
@@ -201,10 +211,31 @@
   color: var(--muted);
 }
 
+.table-wrap {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-wrap::-webkit-scrollbar {
+  height: 8px;
+}
+
+.table-wrap::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--border) 80%, transparent);
+  border-radius: 999px;
+}
+
+.table-wrap::-webkit-scrollbar-track {
+  background: color-mix(in srgb, var(--surface) 80%, var(--bg));
+}
+
 .data-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 14px;
+  min-width: 720px;
 }
 
 .data-table th,
@@ -423,6 +454,41 @@
   .page-header__actions {
     width: 100%;
     justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 640px) {
+  .app-container {
+    gap: 20px;
+  }
+
+  .app-page {
+    gap: 16px;
+  }
+
+  .page-header {
+    gap: 12px;
+  }
+
+  .page-header__actions {
+    gap: 8px;
+  }
+
+  .list-card,
+  .kpi-card,
+  .account-card {
+    padding: 14px;
+    max-width: 100%;
+  }
+
+  .card-grid,
+  .kpi-grid,
+  .accounts-grid {
+    gap: 12px;
+  }
+
+  .segmented-tabs {
     flex-wrap: wrap;
   }
 }
