@@ -11,6 +11,7 @@ const navSections = [
   {
     label: 'Ventas',
     icon: 'sales',
+    to: '/app/ventas',
     children: [
       { label: 'Presupuestos', to: '/app/ventas/presupuestos' },
       { label: 'Facturas', to: '/app/ventas/facturas' },

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import './appSidebar.scss';
 
 function Icon({ name }) {
@@ -65,6 +65,7 @@ function Icon({ name }) {
 
 export default function AppSidebar({ sections, isOpen, onClose }) {
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const [openGroups, setOpenGroups] = useState(() =>
     sections
       .filter((item) => item.children)
@@ -77,6 +78,14 @@ export default function AppSidebar({ sections, isOpen, onClose }) {
       [label]: !prev[label],
     }));
 
+  const handleGroupClick = (item) => {
+    if (item.to) {
+      navigate(item.to);
+      if (onClose) onClose();
+    }
+    toggleGroup(item.label);
+  };
+
   return (
     <aside className={`app-sidebar ${isOpen ? 'is-open' : ''}`}>
       <div className="app-sidebar__brand">
@@ -87,7 +96,8 @@ export default function AppSidebar({ sections, isOpen, onClose }) {
         <ul className="app-sidebar__root">
           {sections.map((item) => {
             const isParentActive = item.children
-              ? item.children.some((child) => pathname.startsWith(child.to))
+              ? item.children.some((child) => pathname.startsWith(child.to)) ||
+                (item.to ? pathname.startsWith(item.to) : false)
               : pathname.startsWith(item.to ?? '');
             const isExpanded = item.children ? openGroups[item.label] : false;
             return (
@@ -98,7 +108,7 @@ export default function AppSidebar({ sections, isOpen, onClose }) {
                     className={`app-sidebar__item ${isExpanded ? 'is-open' : ''} ${
                       isParentActive ? 'is-active' : ''
                     }`}
-                    onClick={() => toggleGroup(item.label)}
+                    onClick={() => handleGroupClick(item)}
                   >
                     <span className="app-sidebar__item-start">
                       <span className="app-sidebar__icon">
