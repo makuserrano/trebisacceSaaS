@@ -44,6 +44,29 @@
   align-items: center;
 }
 
+.sales__action-cell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 120px;
+}
+
+.sales__delete-button {
+  color: var(--text);
+  font-weight: 600;
+  border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+  border-radius: 10px;
+  padding: 6px 10px;
+  background: transparent;
+}
+
+.sales__delete-button:hover,
+.sales__delete-button:focus-visible {
+  border-color: color-mix(in srgb, var(--accent) 70%, transparent);
+  background: color-mix(in srgb, var(--surface) 70%, var(--bg));
+  outline: none;
+}
+
 .sales__status-trigger {
   width: 160px;
   box-sizing: border-box;
@@ -52,6 +75,52 @@
   align-items: center;
   padding: 4px 10px;
   line-height: 1.1;
+}
+
+.sales__status--draft {
+  border-color: rgba(255, 255, 255, 0.25);
+  color: var(--text);
+}
+
+.sales__status--issued {
+  border-color: #f1c40f;
+  color: #f1c40f;
+}
+
+.sales__status--issued:hover {
+  border-color: #f7d84b;
+  color: #f7d84b;
+}
+
+.sales__status--paid {
+  border-color: #2ecc71;
+  color: #2ecc71;
+}
+
+.sales__status--paid:hover {
+  border-color: #3fe88b;
+  color: #3fe88b;
+}
+
+.sales__status--draft::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.35);
+  margin-right: 8px;
+  flex: 0 0 auto;
+}
+
+.sales__status--issued::before,
+.sales__status--paid::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: currentColor;
+  margin-right: 8px;
+  flex: 0 0 auto;
 }
 
 .sales__status-trigger:focus-visible {
@@ -107,6 +176,104 @@
 
 .sales-page--invoices .table-wrap {
   overflow-x: auto;
+}
+
+.sales__sort-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.sales__sort-button.is-active {
+  color: var(--text);
+}
+
+.sales__sort-indicator {
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+.sales__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.sales__import-button {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.18s ease, background-color 0.18s ease, border-color 0.18s ease;
+}
+
+.sales__import-button:hover {
+  background: color-mix(in srgb, var(--surface) 75%, var(--bg));
+  border-color: color-mix(in srgb, var(--border) 70%, transparent);
+  transform: translateY(-1px);
+}
+
+.sales__import-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.sales__import-input {
+  display: none;
+}
+
+.sales__import-feedback {
+  margin: 16px 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+  color: var(--text);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.sales__import-feedback-main p {
+  margin: 0 0 6px;
+  font-weight: 600;
+}
+
+.sales__import-feedback-main ul {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--muted);
+  display: grid;
+  gap: 4px;
+}
+
+.sales__import-feedback-clear {
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.sales__import-feedback-clear:hover {
+  background: color-mix(in srgb, var(--surface) 75%, var(--bg));
+  border-color: color-mix(in srgb, var(--border) 70%, transparent);
 }
 
 .sales__status-option {
@@ -263,6 +430,12 @@
 
 .sales-overview__lists {
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.sales-overview .kpi-card__delta {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
 }
 
 .sales-overview__state {

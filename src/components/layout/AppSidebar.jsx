@@ -89,7 +89,11 @@ export default function AppSidebar({ sections, isOpen, onClose }) {
   return (
     <aside className={`app-sidebar ${isOpen ? 'is-open' : ''}`}>
       <div className="app-sidebar__brand">
-        <span className="app-sidebar__logo">Trebisacce</span>
+        <img
+          src="/brand.svg"
+          alt="Trebisacce"
+          className="app-sidebar__logo"
+        />
       </div>
 
       <nav className="app-sidebar__nav" aria-label="Navegación principal">

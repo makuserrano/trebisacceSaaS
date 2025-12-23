@@ -87,7 +87,11 @@ export default function SalesOverview() {
 
   const latestInvoices = useMemo(() => {
     return [...invoices]
-      .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
+      .sort((a, b) => {
+        const dateCompare = (b.date || '').localeCompare(a.date || '');
+        if (dateCompare !== 0) return dateCompare;
+        return (Number(b.createdAt) || 0) - (Number(a.createdAt) || 0);
+      })
       .slice(0, 3);
   }, [invoices]);
 

@@ -11,7 +11,13 @@ export default function Topbar() {
   return (
     <header className={`topbar ${isOpen ? "is-open" : ""}`}>
       <div className="topbar__inner">
-        <div className="topbar__brand">Trebisacce</div>
+        <a className="topbar__brand" href="/">
+          <img
+            className="topbar__logo"
+            src="/brand.svg"
+            alt="Trebisacce"
+          />
+        </a>
 
         <nav className="topbar__nav" aria-label="Navegación principal">
           <a className="topbar__link" href="#proceso">

@@ -19,10 +19,18 @@
 }
 
 .topbar__brand {
-  font-weight: 700;
-  letter-spacing: 0.02em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
   color: var(--accent);
-  font-size: 18px;
+  text-decoration: none;
+}
+
+.topbar__logo {
+  height: 40px;
+  width: auto;
+  display: block;
 }
 
 .topbar__nav {
@@ -131,6 +139,10 @@
 }
 
 @media (max-width: 1023px) {
+  .topbar__logo {
+    height: 34px;
+  }
+
   .topbar__inner {
     justify-content: space-between;
     gap: var(--s-2);

@@ -1,22 +1,25 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import * as XLSX from "xlsx";
 import DataTable from "../../../components/app/DataTable.jsx";
 import InlineSelect from "../../../components/app/InlineSelect.jsx";
 import PageHeader from "../../../components/app/PageHeader.jsx";
 import PrimaryButton from "../../../components/app/PrimaryButton.jsx";
 import {
   createInvoice,
+  deleteInvoice,
   getInvoices,
   updateInvoice,
 } from "../../../services/invoices.service.js";
 import "./sales.scss";
 
-const columns = [
-  { key: "numero", label: "Número" },
-  { key: "cliente", label: "Cliente" },
-  { key: "total", label: "Total", align: "center" },
-  { key: "estado", label: "Estado", align: "center" },
-  { key: "fecha", label: "Fecha", align: "right" },
+const baseColumns = [
+  { key: "numero", label: "Número", sortable: true },
+  { key: "cliente", label: "Cliente", sortable: true },
+  { key: "total", label: "Total", align: "center", sortable: true },
+  { key: "estado", label: "Estado", align: "center", sortable: true },
+  { key: "fecha", label: "Fecha", align: "right", sortable: true },
+  { key: "acciones", label: "Acciones", align: "right", sortable: false },
 ];
 
 const statusLabel = {
@@ -44,9 +47,13 @@ export default function InvoicesList() {
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+  const [sortConfig, setSortConfig] = useState(null);
   const [openStatusId, setOpenStatusId] = useState(null);
   const statusMenuRef = useRef(null);
   const statusTriggerRef = useRef(null);
+  const fileInputRef = useRef(null);
+  const [importFeedback, setImportFeedback] = useState(null);
   const [statusMenuPosition, setStatusMenuPosition] = useState({
     top: 0,
     left: 0,
@@ -145,6 +152,28 @@ export default function InvoicesList() {
       });
   };
 
+  const handleSortClick = (key) => {
+    setSortConfig((prev) => {
+      if (!prev || prev.key !== key) return { key, direction: "asc" };
+      if (prev.direction === "asc") return { key, direction: "desc" };
+      return null;
+    });
+  };
+
+  const handleDeleteInvoice = (invoice) => {
+    const ok = window.confirm(
+      `¿Eliminar la factura ${invoice.number}? Esta acción no se puede deshacer.`
+    );
+    if (!ok) return;
+    deleteInvoice(invoice.id)
+      .then(() => {
+        setInvoices((prev) => prev.filter((item) => item.id !== invoice.id));
+      })
+      .catch((err) => {
+        setError(err?.message || "Error al eliminar factura");
+      });
+  };
+
   const handleOpenModal = () => {
     setError(null);
     setFormData({
@@ -199,7 +228,297 @@ export default function InvoicesList() {
       .finally(() => setIsSaving(false));
   };
 
-  const rows = invoices.map((invoice) => ({
+  const normalizeHeader = (value) => {
+    if (value === null || value === undefined) return "";
+    return value
+      .toString()
+      .trim()
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/\s+/g, " ");
+  };
+
+  const findColumnIndex = (headers, names) => {
+    const normalizedNames = names.map(normalizeHeader);
+    return headers.findIndex((header) => normalizedNames.includes(header));
+  };
+
+  const formatDateValue = (value) => {
+    if (!value && value !== 0) return "";
+    if (value instanceof Date && !Number.isNaN(value.getTime())) {
+      return value.toISOString().slice(0, 10);
+    }
+    if (typeof value === "number") {
+      const parsed = XLSX.SSF.parse_date_code(value);
+      if (parsed?.y && parsed?.m && parsed?.d) {
+        const date = new Date(Date.UTC(parsed.y, parsed.m - 1, parsed.d));
+        return date.toISOString().slice(0, 10);
+      }
+    }
+    if (typeof value === "string") {
+      const trimmed = value.trim();
+      if (!trimmed) return "";
+      if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return trimmed;
+      const slashMatch = trimmed.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})$/);
+      if (slashMatch) {
+        const day = Number(slashMatch[1]);
+        const month = Number(slashMatch[2]);
+        let year = Number(slashMatch[3]);
+        if (year < 100) year += 2000;
+        if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+          return `${year.toString().padStart(4, "0")}-${month
+            .toString()
+            .padStart(2, "0")}-${day.toString().padStart(2, "0")}`;
+        }
+      }
+      const parsed = new Date(trimmed);
+      if (!Number.isNaN(parsed.getTime())) {
+        return parsed.toISOString().slice(0, 10);
+      }
+    }
+    return "";
+  };
+
+  const normalizeTotalValue = (value) => {
+    if (typeof value === "number") return value;
+    if (typeof value === "string") {
+      let cleaned = value.trim();
+      if (!cleaned) return Number.NaN;
+      cleaned = cleaned.replace(/[^\d,.-]/g, "");
+      if (!cleaned) return Number.NaN;
+      const hasComma = cleaned.includes(",");
+      const hasDot = cleaned.includes(".");
+      if (hasComma && hasDot) {
+        cleaned = cleaned.replace(/\./g, "").replace(",", ".");
+      } else if (hasComma) {
+        cleaned = cleaned.replace(",", ".");
+      }
+      return Number(cleaned);
+    }
+    return Number.NaN;
+  };
+
+  const normalizeStatusValue = (value) => {
+    if (value === null || value === undefined) return "draft";
+    const raw = value.toString().trim().toLowerCase();
+    if (!raw) return "draft";
+    if (["draft", "issued", "paid"].includes(raw)) return raw;
+    if (raw.includes("borrador")) return "draft";
+    if (raw.includes("emitida")) return "issued";
+    if (raw.includes("cobrada") || raw.includes("pagada")) return "paid";
+    return "draft";
+  };
+
+  const handleImportClick = () => {
+    setError(null);
+    fileInputRef.current?.click();
+  };
+
+  const handleExportClick = () => {
+    if (!invoices.length) return;
+    const data = invoices.map((invoice) => ({
+      "Número": invoice.number,
+      Cliente: invoice.clientName,
+      Fecha: invoice.date,
+      Total: invoice.total,
+      Estado: statusLabel[invoice.status] ?? invoice.status,
+    }));
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Facturas");
+    XLSX.writeFile(workbook, "facturas.xlsx");
+  };
+
+  const handleImportFile = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+
+    setIsImporting(true);
+    setImportFeedback(null);
+    setError(null);
+
+    try {
+      const isCsv = file.name.toLowerCase().endsWith(".csv");
+      const data = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(new Error("No se pudo leer el archivo."));
+        if (isCsv) {
+          reader.readAsText(file);
+        } else {
+          reader.readAsArrayBuffer(file);
+        }
+      });
+
+      const workbook = XLSX.read(data, {
+        type: isCsv ? "string" : "array",
+        cellDates: true,
+        raw: true,
+      });
+      const sheetName = workbook.SheetNames[0];
+      if (!sheetName) {
+        throw new Error("No se encontró una hoja para importar.");
+      }
+      const sheet = workbook.Sheets[sheetName];
+      const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
+      if (!rows.length) {
+        throw new Error("El archivo no tiene filas.");
+      }
+
+      const headers = rows[0].map((header) => normalizeHeader(header));
+      const columnIndex = {
+        number: findColumnIndex(headers, ["Número", "Nro", "Factura", "Number"]),
+        clientName: findColumnIndex(headers, ["Cliente", "Client"]),
+        date: findColumnIndex(headers, ["Fecha", "Date"]),
+        total: findColumnIndex(headers, ["Total", "Importe", "Amount"]),
+        status: findColumnIndex(headers, ["Estado", "Status"]),
+      };
+
+      let imported = 0;
+      let skipped = 0;
+      const errors = [];
+
+      for (let i = 1; i < rows.length; i += 1) {
+        const row = rows[i] || [];
+        const isRowEmpty = row.every(
+          (cell) => cell === null || cell === undefined || cell === ""
+        );
+        if (isRowEmpty) continue;
+
+        const rowNumber = i + 1;
+        const numberValue =
+          columnIndex.number >= 0 ? row[columnIndex.number] : "";
+        const clientValue =
+          columnIndex.clientName >= 0 ? row[columnIndex.clientName] : "";
+        const dateValue = columnIndex.date >= 0 ? row[columnIndex.date] : "";
+        const totalValue = columnIndex.total >= 0 ? row[columnIndex.total] : "";
+        const statusValue =
+          columnIndex.status >= 0 ? row[columnIndex.status] : "";
+
+        const normalizedNumber = numberValue?.toString().trim();
+        const normalizedClient = clientValue?.toString().trim();
+        const normalizedDate = formatDateValue(dateValue);
+        const normalizedTotal = normalizeTotalValue(totalValue);
+        const normalizedStatus = normalizeStatusValue(statusValue);
+
+        const rowErrors = [];
+        if (!normalizedNumber) rowErrors.push("falta Número");
+        if (!normalizedClient) rowErrors.push("falta Cliente");
+        if (!normalizedDate) rowErrors.push("falta Fecha");
+        if (Number.isNaN(normalizedTotal) || normalizedTotal < 0) {
+          rowErrors.push("Total inválido");
+        }
+
+        if (rowErrors.length > 0) {
+          skipped += 1;
+          if (errors.length < 5) {
+            errors.push(`Fila ${rowNumber}: ${rowErrors.join(", ")}`);
+          }
+          continue;
+        }
+
+        try {
+          await createInvoice({
+            number: normalizedNumber,
+            clientName: normalizedClient,
+            date: normalizedDate,
+            total: normalizedTotal,
+            status: normalizedStatus,
+          });
+          imported += 1;
+        } catch (err) {
+          skipped += 1;
+          if (errors.length < 5) {
+            errors.push(
+              `Fila ${rowNumber}: ${err?.message || "Error al guardar"}`
+            );
+          }
+        }
+      }
+
+      setImportFeedback({ imported, skipped, errors });
+      fetchInvoices();
+    } catch (err) {
+      setImportFeedback({
+        imported: 0,
+        skipped: 0,
+        errors: [err?.message || "No se pudo procesar el archivo."],
+      });
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
+  const sortedInvoices = useMemo(() => {
+    if (!sortConfig) return invoices;
+    const sorted = [...invoices];
+    const multiplier = sortConfig.direction === "asc" ? 1 : -1;
+    sorted.sort((a, b) => {
+      const key = sortConfig.key;
+      if (key === "numero") {
+        return (
+          (a.number || "").localeCompare(b.number || "", "es", {
+            sensitivity: "base",
+          }) * multiplier
+        );
+      }
+      if (key === "cliente") {
+        return (
+          (a.clientName || "").localeCompare(b.clientName || "", "es", {
+            sensitivity: "base",
+          }) * multiplier
+        );
+      }
+      if (key === "total") {
+        const aValue = Number(a.total) || 0;
+        const bValue = Number(b.total) || 0;
+        return (aValue - bValue) * multiplier;
+      }
+      if (key === "estado") {
+        return (
+          (a.status || "").localeCompare(b.status || "", "es", {
+            sensitivity: "base",
+          }) * multiplier
+        );
+      }
+      if (key === "fecha") {
+        const aTime = Date.parse(a.date || "") || 0;
+        const bTime = Date.parse(b.date || "") || 0;
+        return (aTime - bTime) * multiplier;
+      }
+      return 0;
+    });
+    return sorted;
+  }, [invoices, sortConfig]);
+
+  const columns = useMemo(() => {
+    return baseColumns.map((col) => {
+      if (!col.sortable) return col;
+      const isActive = sortConfig?.key === col.key;
+      const direction = isActive ? sortConfig.direction : null;
+      return {
+        ...col,
+        label: (
+          <button
+            type="button"
+            className={`sales__sort-button ${isActive ? "is-active" : ""}`}
+            onClick={() => handleSortClick(col.key)}
+          >
+            <span>{col.label}</span>
+            {direction && (
+              <span className="sales__sort-indicator">
+                {direction === "asc" ? "↑" : "↓"}
+              </span>
+            )}
+          </button>
+        ),
+      };
+    });
+  }, [sortConfig]);
+
+  const rows = sortedInvoices.map((invoice) => ({
     id: invoice.id,
     cells: [
       invoice.number,
@@ -208,7 +527,7 @@ export default function InvoicesList() {
       <div key="estado" className="sales__status-cell">
         <button
           type="button"
-          className="sales__inline-action sales__status-trigger"
+          className={`sales__inline-action sales__status-trigger sales__status--${invoice.status}`}
           onClick={(event) => handleStatusToggle(invoice.id, event)}
           aria-haspopup="menu"
           aria-expanded={openStatusId === invoice.id}
@@ -220,6 +539,15 @@ export default function InvoicesList() {
         </button>
       </div>,
       invoice.date,
+      <div key="acciones" className="sales__action-cell">
+        <button
+          type="button"
+          className="sales__inline-action sales__delete-button"
+          onClick={() => handleDeleteInvoice(invoice)}
+        >
+          Eliminar
+        </button>
+      </div>,
     ],
   }));
 
@@ -232,8 +560,33 @@ export default function InvoicesList() {
         title="Facturas"
         subtitle="Gestión de facturas"
         actions={
-          <PrimaryButton label="Nueva factura" onClick={handleOpenModal} />
+          <div className="sales__header-actions">
+            <button
+              type="button"
+              className="sales__import-button"
+              onClick={handleImportClick}
+              disabled={isImporting}
+            >
+              {isImporting ? "Importando..." : "Importar Excel"}
+            </button>
+            <button
+              type="button"
+              className="sales__import-button"
+              onClick={handleExportClick}
+              disabled={!invoices.length}
+            >
+              Exportar Excel
+            </button>
+            <PrimaryButton label="Nueva factura" onClick={handleOpenModal} />
+          </div>
         }
+      />
+      <input
+        ref={fileInputRef}
+        className="sales__import-input"
+        type="file"
+        accept=".xlsx,.xls,.csv"
+        onChange={handleImportFile}
       />
 
       {loading && <p>Cargando...</p>}
@@ -247,6 +600,31 @@ export default function InvoicesList() {
         <div>
           <p>Todavía no hay facturas.</p>
           <PrimaryButton label="Nueva factura" onClick={handleOpenModal} />
+        </div>
+      )}
+
+      {importFeedback && (
+        <div className="sales__import-feedback">
+          <div className="sales__import-feedback-main">
+            <p>
+              Importadas {importFeedback.imported}, omitidas{" "}
+              {importFeedback.skipped}
+            </p>
+            {importFeedback.errors?.length > 0 && (
+              <ul>
+                {importFeedback.errors.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            )}
+          </div>
+          <button
+            type="button"
+            className="sales__import-feedback-clear"
+            onClick={() => setImportFeedback(null)}
+          >
+            Limpiar
+          </button>
         </div>
       )}
 

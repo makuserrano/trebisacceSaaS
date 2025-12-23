@@ -51,13 +51,22 @@ function sanitizeInvoice(data) {
   if (data.date !== undefined) allowed.date = data.date;
   if (data.status !== undefined) allowed.status = data.status;
   if (data.total !== undefined) allowed.total = data.total;
+  if (data.createdAt !== undefined) allowed.createdAt = data.createdAt;
+  if (data.updatedAt !== undefined) allowed.updatedAt = data.updatedAt;
   return allowed;
 }
 
 export function getInvoices() {
   return withLatency(() => {
-    const invoices = readInvoices();
-    return invoices.map((inv) => ({ ...inv }));
+    const invoices = readInvoices().map((inv) => ({ ...inv }));
+    invoices.sort((a, b) => {
+      const dateCompare = (b.date || '').localeCompare(a.date || '');
+      if (dateCompare !== 0) return dateCompare;
+      const createdB = Number(b.createdAt) || 0;
+      const createdA = Number(a.createdAt) || 0;
+      return createdB - createdA;
+    });
+    return invoices;
   });
 }
 
@@ -65,9 +74,14 @@ export function createInvoice(invoiceData) {
   return withLatency(() => {
     const invoices = readInvoices();
     const clean = sanitizeInvoice(invoiceData);
+    const now = Date.now();
+    const createdAt = clean.createdAt ?? now;
+    const updatedAt = clean.updatedAt ?? createdAt;
     const newInvoice = {
       ...clean,
       id: clean.id || `inv-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      createdAt,
+      updatedAt,
     };
     invoices.unshift(newInvoice);
     writeInvoices(invoices);
@@ -86,5 +100,18 @@ export function updateInvoice(id, partialData) {
     invoices[index] = updated;
     writeInvoices(invoices);
     return { ...updated };
+  });
+}
+
+export function deleteInvoice(id) {
+  return withLatency(() => {
+    if (!id) throw new Error('Invoice id is required');
+    const invoices = readInvoices();
+    const nextInvoices = invoices.filter((inv) => inv.id !== id);
+    if (nextInvoices.length === invoices.length) {
+      throw new Error('Invoice not found');
+    }
+    writeInvoices(nextInvoices);
+    return { id };
   });
 }
