@@ -23,6 +23,7 @@ const navSections = [
     children: [
       { label: 'Cuentas', to: '/app/tesoreria/cuentas' },
       { label: 'Movimientos', to: '/app/tesoreria/movimientos' },
+      { label: 'Pagos', to: '/app/tesoreria/pagos' },
     ],
   },
   { label: 'Decisiones', to: '/app/decisiones', icon: 'flag' },

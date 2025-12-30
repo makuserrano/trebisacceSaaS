@@ -13,10 +13,8 @@ const invoiceStatusLabel = {
 };
 
 const quoteStatusLabel = {
-  draft: 'Borrador',
   sent: 'Enviado',
-  accepted: 'Aceptado',
-  rejected: 'Rechazado',
+  converted: 'Convertido',
 };
 
 const currencyFormatter = new Intl.NumberFormat('es-AR', {
@@ -59,13 +57,11 @@ export default function SalesOverview() {
     );
     const pendingInvoices = invoices.filter((invoice) => invoice.status !== 'paid')
       .length;
-    const openQuotes = quotes.filter((quote) =>
-      ['draft', 'sent'].includes(quote.status),
-    ).length;
+    const openQuotes = quotes.filter((quote) => quote.status === 'sent').length;
 
     return [
       {
-        label: 'Facturación acumulada',
+        label: 'Facturacion acumulada',
         value: currencyFormatter.format(totalInvoiced),
         meta: 'suma total registrada',
         delta: `${invoices.length} facturas`,
@@ -153,13 +149,13 @@ export default function SalesOverview() {
 
           <div className="card-grid sales-overview__lists">
             <article className="list-card">
-              <h3 className="list-card__title">Últimas facturas</h3>
+              <h3 className="list-card__title">Ultimas facturas</h3>
               {latestInvoices.map((invoice) => (
                 <div className="list-card__item" key={invoice.id}>
                   <div className="list-card__meta">
                     <p className="list-card__label">{invoice.number}</p>
                     <p className="list-card__value">
-                      {invoice.clientName} · {currencyFormatter.format(invoice.total)}
+                      {invoice.clientName} - {currencyFormatter.format(invoice.total)}
                     </p>
                   </div>
                   <StatusBadge
@@ -169,28 +165,28 @@ export default function SalesOverview() {
                 </div>
               ))}
               {latestInvoices.length === 0 && (
-                <p className="sales-overview__empty">Todavía no hay facturas.</p>
+                <p className="sales-overview__empty">Todavia no hay facturas.</p>
               )}
             </article>
 
             <article className="list-card">
-              <h3 className="list-card__title">Últimos presupuestos</h3>
+              <h3 className="list-card__title">Ultimos presupuestos</h3>
               {latestQuotes.map((quote) => (
                 <div className="list-card__item" key={quote.id}>
                   <div className="list-card__meta">
-                    <p className="list-card__label">{quote.number}</p>
+                    <p className="list-card__label">{quote.id}</p>
                     <p className="list-card__value">
-                      {quote.clientName} · {currencyFormatter.format(quote.total)}
+                      {quote.clientName} - {currencyFormatter.format(quote.total)}
                     </p>
                   </div>
                   <StatusBadge
                     label={quoteStatusLabel[quote.status] ?? quote.status}
-                    tone={quote.status === 'draft' ? 'muted' : 'accent'}
+                    tone={quote.status === 'converted' ? 'muted' : 'accent'}
                   />
                 </div>
               ))}
               {latestQuotes.length === 0 && (
-                <p className="sales-overview__empty">Todavía no hay presupuestos.</p>
+                <p className="sales-overview__empty">Todavia no hay presupuestos.</p>
               )}
             </article>
           </div>

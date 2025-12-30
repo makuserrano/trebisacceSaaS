@@ -10,6 +10,7 @@ import InvoicesList from '../pages/app/Sales/InvoicesList.jsx';
 import SalesOverview from '../pages/app/Sales/SalesOverview.jsx';
 import Accounts from '../pages/app/Treasury/Accounts.jsx';
 import Movements from '../pages/app/Treasury/Movements.jsx';
+import PaymentsList from '../pages/app/Treasury/PaymentsList.jsx';
 import DecisionsList from '../pages/app/Decisions/DecisionsList.jsx';
 
 const router = createBrowserRouter([
@@ -62,6 +63,10 @@ const router = createBrowserRouter([
       {
         path: 'tesoreria/movimientos',
         element: <Movements />,
+      },
+      {
+        path: 'tesoreria/pagos',
+        element: <PaymentsList />,
       },
       {
         path: 'decisiones',

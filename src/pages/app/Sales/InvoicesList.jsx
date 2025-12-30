@@ -11,6 +11,7 @@ import {
   getInvoices,
   updateInvoice,
 } from "../../../services/invoices.service.js";
+import { getInvoicePaymentSummaries } from "../../../services/payments.service.js";
 import "./sales.scss";
 
 const baseColumns = [
@@ -31,7 +32,12 @@ const statusLabel = {
 const statusOptions = [
   { value: "draft", label: "Borrador" },
   { value: "issued", label: "Emitida" },
-  { value: "paid", label: "Cobrada" },
+  {
+    value: "paid",
+    label: "Cobrada",
+    disabled: true,
+    hint: "Se cobra desde Pagos",
+  },
 ];
 
 const currencyFormatter = new Intl.NumberFormat("es-AR", {
@@ -43,6 +49,7 @@ const currencyFormatter = new Intl.NumberFormat("es-AR", {
 
 export default function InvoicesList() {
   const [invoices, setInvoices] = useState([]);
+  const [paymentSummaries, setPaymentSummaries] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -73,6 +80,10 @@ export default function InvoicesList() {
     getInvoices()
       .then((data) => {
         setInvoices(data);
+        return getInvoicePaymentSummaries(data.map((invoice) => invoice.id));
+      })
+      .then((summaries) => {
+        setPaymentSummaries(summaries);
       })
       .catch((err) => {
         setError(err?.message || "Error al cargar facturas");
@@ -138,6 +149,11 @@ export default function InvoicesList() {
   };
 
   const handleStatusSelect = (invoice, nextStatus) => {
+    if (nextStatus === "paid") {
+      setError("El estado Cobrada se actualiza desde Pagos.");
+      setOpenStatusId(null);
+      return;
+    }
     updateInvoice(invoice.id, { status: nextStatus })
       .then((updated) => {
         setInvoices((prev) =>
@@ -523,7 +539,15 @@ export default function InvoicesList() {
     cells: [
       invoice.number,
       invoice.clientName,
-      currencyFormatter.format(invoice.total),
+      <div key="total" className="sales__amount-cell">
+        <span>{currencyFormatter.format(invoice.total)}</span>
+        {paymentSummaries[invoice.id] && (
+          <span className="sales__amount-meta">
+            Cobrado {currencyFormatter.format(paymentSummaries[invoice.id].paidAmount)} ·
+            Saldo {currencyFormatter.format(paymentSummaries[invoice.id].balance)}
+          </span>
+        )}
+      </div>,
       <div key="estado" className="sales__status-cell">
         <button
           type="button"
@@ -650,6 +674,8 @@ export default function InvoicesList() {
                 className="sales__status-option"
                 role="menuitem"
                 onClick={() => handleStatusSelect(openInvoice, option.value)}
+                disabled={option.disabled}
+                title={option.disabled ? option.hint : undefined}
               >
                 {option.label}
               </button>
@@ -724,7 +750,9 @@ export default function InvoicesList() {
                 >
                   <option value="draft">Borrador</option>
                   <option value="issued">Emitida</option>
-                  <option value="paid">Cobrada</option>
+                  <option value="paid" disabled>
+                    Cobrada (desde Pagos)
+                  </option>
                 </select>
               </label>
               <div className="sales__modal-actions">

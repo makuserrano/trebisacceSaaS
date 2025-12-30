@@ -103,6 +103,30 @@ export function updateInvoice(id, partialData) {
   });
 }
 
+export function getInvoiceSnapshot(id) {
+  if (!id) throw new Error('Invoice id is required');
+  const invoices = readInvoices();
+  const invoice = invoices.find((inv) => inv.id === id);
+  if (!invoice) throw new Error('Invoice not found');
+  return { ...invoice };
+}
+
+export function updateInvoiceStatus(id, status) {
+  if (!id) throw new Error('Invoice id is required');
+  const invoices = readInvoices();
+  const index = invoices.findIndex((inv) => inv.id === id);
+  if (index === -1) throw new Error('Invoice not found');
+  const updatedAt = Date.now();
+  const updated = {
+    ...invoices[index],
+    status,
+    updatedAt,
+  };
+  invoices[index] = updated;
+  writeInvoices(invoices);
+  return { ...updated };
+}
+
 export function deleteInvoice(id) {
   return withLatency(() => {
     if (!id) throw new Error('Invoice id is required');

@@ -16,3 +16,120 @@
   display: grid;
   place-items: center;
 }
+
+.treasury__action-cell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.treasury__inline-action {
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+  color: var(--text);
+  padding: 6px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.treasury__inline-action:hover,
+.treasury__inline-action:focus-visible {
+  border-color: color-mix(in srgb, var(--accent) 70%, transparent);
+  background: color-mix(in srgb, var(--surface) 70%, var(--bg));
+  outline: none;
+}
+
+.treasury__delete-button {
+  color: var(--text);
+}
+
+.treasury__modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  background: rgba(37, 36, 34, 0.72);
+  display: grid;
+  place-items: center;
+  padding: 16px;
+}
+
+.treasury__modal {
+  width: min(520px, 100%);
+  background: #403d39;
+  color: #fffcf2;
+  border: 1px solid rgba(255, 252, 242, 0.08);
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+}
+
+.treasury__modal-title {
+  margin: 0 0 16px;
+  font-size: 22px;
+  letter-spacing: -0.01em;
+}
+
+.treasury__modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.treasury__modal-field {
+  display: grid;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.treasury__modal-field input,
+.treasury__modal-field select,
+.treasury__modal-field textarea {
+  width: 100%;
+  background: rgba(255, 252, 242, 0.06);
+  color: #fffcf2;
+  border: 1px solid rgba(255, 252, 242, 0.16);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font: inherit;
+}
+
+.treasury__modal-field input::placeholder,
+.treasury__modal-field textarea::placeholder {
+  color: rgba(255, 252, 242, 0.5);
+}
+
+.treasury__modal-field input:focus,
+.treasury__modal-field select:focus,
+.treasury__modal-field textarea:focus {
+  outline: 2px solid rgba(235, 94, 40, 0.6);
+  outline-offset: 2px;
+  border-color: rgba(235, 94, 40, 0.6);
+}
+
+.treasury__modal-field textarea {
+  resize: vertical;
+}
+
+.treasury__modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.treasury__modal-cancel {
+  background: transparent;
+  color: #fffcf2;
+  border: 1px solid rgba(255, 252, 242, 0.2);
+  border-radius: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.treasury__modal-field select option {
+  background-color: #403d39;
+  color: #fffcf2;
+}

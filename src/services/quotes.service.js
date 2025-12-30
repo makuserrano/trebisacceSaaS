@@ -2,11 +2,12 @@ const STORAGE_KEY = 'trebisacce_quotes';
 const LATENCY_MIN = 300;
 const LATENCY_MAX = 500;
 
+const ALLOWED_STATUS = new Set(['sent', 'converted']);
+
 const seedQuotes = [
-  { id: 'quo-001', number: 'P-2025-010', clientName: 'Acme Corp', date: '2025-01-20', status: 'sent', total: 4200 },
-  { id: 'quo-002', number: 'P-2025-009', clientName: 'Tech Solutions', date: '2025-01-18', status: 'draft', total: 1850 },
-  { id: 'quo-003', number: 'P-2025-008', clientName: 'Global Services', date: '2025-01-12', status: 'accepted', total: 7600 },
-  { id: 'quo-004', number: 'P-2025-007', clientName: 'Northwind', date: '2025-01-09', status: 'rejected', total: 2350 },
+  { id: 'quo-001', clientName: 'Acme Corp', date: '2025-01-20', status: 'sent', total: 4200 },
+  { id: 'quo-002', clientName: 'Tech Solutions', date: '2025-01-18', status: 'converted', total: 1850 },
+  { id: 'quo-003', clientName: 'Global Services', date: '2025-01-12', status: 'sent', total: 7600 },
 ];
 
 function withLatency(resultFn) {
@@ -20,6 +21,17 @@ function withLatency(resultFn) {
       }
     }, delay);
   });
+}
+
+function normalizeStatus(value) {
+  if (value === null || value === undefined) return 'sent';
+  const raw = value.toString().trim().toLowerCase();
+  if (!raw) return 'sent';
+  if (raw === 'sent' || raw.includes('enviado')) return 'sent';
+  if (raw === 'converted' || raw.includes('convert') || raw.includes('acept')) return 'converted';
+  if (raw.includes('draft') || raw.includes('borrador')) return 'sent';
+  if (raw.includes('rejected') || raw.includes('rechaz')) return 'sent';
+  return ALLOWED_STATUS.has(raw) ? raw : 'sent';
 }
 
 function readQuotes() {
@@ -46,18 +58,21 @@ function sanitizeQuote(data) {
   if (!data || typeof data !== 'object') return {};
   const allowed = {};
   if (data.id !== undefined) allowed.id = data.id;
-  if (data.number !== undefined) allowed.number = data.number;
   if (data.clientName !== undefined) allowed.clientName = data.clientName;
   if (data.date !== undefined) allowed.date = data.date;
-  if (data.status !== undefined) allowed.status = data.status;
+  if (data.status !== undefined) allowed.status = normalizeStatus(data.status);
   if (data.total !== undefined) allowed.total = data.total;
   return allowed;
 }
 
 export function getQuotes() {
   return withLatency(() => {
-    const quotes = readQuotes();
-    return quotes.map((quote) => ({ ...quote }));
+    const quotes = readQuotes().map((quote) => ({
+      ...quote,
+      status: normalizeStatus(quote.status),
+    }));
+    quotes.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+    return quotes;
   });
 }
 
@@ -67,6 +82,7 @@ export function createQuote(quoteData) {
     const clean = sanitizeQuote(quoteData);
     const newQuote = {
       ...clean,
+      status: clean.status || 'sent',
       id: clean.id || `quo-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
     };
     quotes.unshift(newQuote);
@@ -83,8 +99,24 @@ export function updateQuote(id, partialData) {
     if (index === -1) throw new Error('Quote not found');
     const updates = sanitizeQuote(partialData);
     const updated = { ...quotes[index], ...updates, id: quotes[index].id };
+    if (updated.status) {
+      updated.status = normalizeStatus(updated.status);
+    }
     quotes[index] = updated;
     writeQuotes(quotes);
     return { ...updated };
+  });
+}
+
+export function removeQuote(id) {
+  return withLatency(() => {
+    if (!id) throw new Error('Quote id is required');
+    const quotes = readQuotes();
+    const nextQuotes = quotes.filter((quote) => quote.id !== id);
+    if (nextQuotes.length === quotes.length) {
+      throw new Error('Quote not found');
+    }
+    writeQuotes(nextQuotes);
+    return { id };
   });
 }

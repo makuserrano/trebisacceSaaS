@@ -51,6 +51,10 @@
   min-width: 120px;
 }
 
+.sales__action-cell--quotes {
+  gap: 10px;
+}
+
 .sales__delete-button {
   color: var(--text);
   font-weight: 600;
@@ -295,6 +299,23 @@
   outline: none;
 }
 
+.sales__status-option:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  border-color: transparent;
+  background: transparent;
+}
+
+.sales__amount-cell {
+  display: grid;
+  gap: 4px;
+}
+
+.sales__amount-meta {
+  font-size: 12px;
+  color: var(--muted);
+}
+
 .sales__modal-backdrop {
   position: fixed;
   inset: 0;
@@ -447,4 +468,23 @@
 .sales-overview__empty {
   margin: 0;
   color: var(--muted);
+}
+
+
+.sales__link:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  border-color: color-mix(in srgb, var(--border) 60%, transparent);
+}
+
+.sales__link:disabled:hover,
+.sales__link:disabled:focus-visible {
+  background: transparent;
+  border-color: color-mix(in srgb, var(--border) 60%, transparent);
+  outline: none;
+}
+
+.sales-page--quotes .data-table th.is-right,
+.sales-page--quotes .data-table td.is-right {
+  text-align: center;
 }
