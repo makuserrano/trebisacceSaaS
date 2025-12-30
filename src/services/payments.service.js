@@ -1,4 +1,11 @@
 import { getInvoiceSnapshot, updateInvoiceStatus } from './invoices.service.js';
+import { getAccounts } from './accounts.service.js';
+import {
+  createTransaction,
+  getTransactionBySource,
+  removeTransaction,
+  updateTransaction,
+} from './transactions.service.js';
 
 const STORAGE_KEY = 'trebisacce_payments_v1';
 const LATENCY_MIN = 300;
@@ -195,6 +202,44 @@ function recalculateInvoiceStatus(invoiceId, paymentsList) {
   updateInvoiceStatus(invoiceId, nextStatus);
 }
 
+async function resolvePaymentAccountId() {
+  const accounts = await getAccounts();
+  if (!accounts.length) return '';
+  const caja = accounts.find(
+    (account) => (account.name || '').toLowerCase() === 'caja'
+  );
+  return (caja || accounts[0]).id;
+}
+
+async function syncPaymentTransaction(payment, invoice) {
+  if (!payment) return;
+  const existing = await getTransactionBySource('payment', payment.id);
+  const accountId = existing?.accountId || (await resolvePaymentAccountId());
+  if (!accountId) return;
+  const payload = {
+    date: payment.date,
+    amount: payment.amount,
+    type: 'income',
+    accountId,
+    category: 'Cobranza',
+    reference: invoice?.number || '',
+    source: 'payment',
+    sourceId: payment.id,
+  };
+  if (existing) {
+    await updateTransaction(existing.id, payload);
+  } else {
+    await createTransaction(payload);
+  }
+}
+
+async function removePaymentTransaction(paymentId) {
+  const existing = await getTransactionBySource('payment', paymentId);
+  if (existing?.id) {
+    await removeTransaction(existing.id);
+  }
+}
+
 export function getPayments(filter = {}) {
   return withLatency(() => {
     const payments = readPayments().map((payment) => ({ ...payment }));
@@ -266,7 +311,7 @@ export function getPaymentsSummary(filter = {}) {
 }
 
 export function createPayment(paymentData) {
-  return withLatency(() => {
+  return withLatency(async () => {
     const payments = readPayments();
     const clean = sanitizePayment(paymentData);
     const invoice = ensureInvoiceIsPayable(clean.invoiceId);
@@ -283,12 +328,13 @@ export function createPayment(paymentData) {
     payments.unshift(newPayment);
     writePayments(payments);
     recalculateInvoiceStatus(invoice.id, payments);
+    await syncPaymentTransaction(newPayment, invoice);
     return { ...newPayment };
   });
 }
 
 export function updatePayment(id, partialData) {
-  return withLatency(() => {
+  return withLatency(async () => {
     if (!id) throw new Error('Payment id is required');
     const payments = readPayments();
     const index = payments.findIndex((payment) => payment.id === id);
@@ -301,7 +347,7 @@ export function updatePayment(id, partialData) {
       id: previous.id,
       updatedAt: updates.updatedAt ?? Date.now(),
     };
-    ensureInvoiceIsPayable(next.invoiceId);
+    const invoice = ensureInvoiceIsPayable(next.invoiceId);
     validatePayment(next);
     payments[index] = next;
     writePayments(payments);
@@ -309,12 +355,13 @@ export function updatePayment(id, partialData) {
     affectedInvoices.forEach((invoiceId) => {
       recalculateInvoiceStatus(invoiceId, payments);
     });
+    await syncPaymentTransaction(next, invoice);
     return { ...next };
   });
 }
 
 export function removePayment(id) {
-  return withLatency(() => {
+  return withLatency(async () => {
     if (!id) throw new Error('Payment id is required');
     const payments = readPayments();
     const payment = payments.find((item) => item.id === id);
@@ -322,6 +369,7 @@ export function removePayment(id) {
     const nextPayments = payments.filter((item) => item.id !== id);
     writePayments(nextPayments);
     recalculateInvoiceStatus(payment.invoiceId, nextPayments);
+    await removePaymentTransaction(payment.id);
     return { id };
   });
 }

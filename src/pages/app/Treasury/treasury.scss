@@ -147,6 +147,34 @@
   gap: 12px;
 }
 
+.treasury__onboarding {
+  margin: 16px 0 20px;
+  padding: 16px;
+  border-radius: 14px;
+  border: 1px dashed color-mix(in srgb, var(--border) 70%, transparent);
+  background: color-mix(in srgb, var(--surface) 70%, var(--bg));
+  display: grid;
+  gap: 12px;
+}
+
+.treasury__onboarding-title {
+  margin: 0 0 4px;
+  font-size: 16px;
+  letter-spacing: -0.01em;
+}
+
+.treasury__onboarding-copy {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.treasury__onboarding-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
 .treasury__cta {
   background: transparent;
   border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
@@ -230,6 +258,35 @@
 
 .treasury__empty {
   margin-top: 16px;
+  color: var(--muted);
+}
+
+.treasury__legend {
+  margin-top: 8px;
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.treasury__legend-item {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.treasury__legend-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+}
+
+.treasury__legend-label {
+  color: var(--text);
+}
+
+.treasury__legend-value {
   color: var(--muted);
 }
 

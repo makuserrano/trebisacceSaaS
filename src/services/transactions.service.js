@@ -201,6 +201,8 @@ function sanitizeTransaction(data) {
   if (data.description !== undefined) allowed.description = data.description;
   if (data.reference !== undefined) allowed.reference = data.reference;
   if (data.relatedEntity !== undefined) allowed.relatedEntity = data.relatedEntity;
+  if (data.source !== undefined) allowed.source = data.source;
+  if (data.sourceId !== undefined) allowed.sourceId = data.sourceId;
   if (data.createdAt !== undefined) allowed.createdAt = data.createdAt;
   if (data.updatedAt !== undefined) allowed.updatedAt = data.updatedAt;
   return allowed;
@@ -278,12 +280,27 @@ function buildDailySeries(list, startDate, endDate) {
   return result;
 }
 
+function findTransactionBySource(source, sourceId) {
+  if (!source || !sourceId) return null;
+  const transactions = readTransactions();
+  return transactions.find(
+    (tx) => tx?.source === source && tx?.sourceId === sourceId
+  );
+}
+
 export function getTransactions(filter = {}) {
   return withLatency(() => {
     const transactions = readTransactions().map((tx) => ({ ...tx }));
     const filtered = applyFilters(transactions, filter);
     filtered.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
     return filtered;
+  });
+}
+
+export function getTransactionBySource(source, sourceId) {
+  return withLatency(() => {
+    const found = findTransactionBySource(source, sourceId);
+    return found ? { ...found } : null;
   });
 }
 
