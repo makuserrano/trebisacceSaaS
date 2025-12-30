@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import * as XLSX from "xlsx";
 import DataTable from "../../../components/app/DataTable.jsx";
@@ -11,6 +11,11 @@ import {
   getInvoices,
   updateInvoice,
 } from "../../../services/invoices.service.js";
+import {
+  getClientById,
+  getClients,
+  getOrCreateClientByName,
+} from "../../../services/clients.service.js";
 import { getInvoicePaymentSummaries } from "../../../services/payments.service.js";
 import "./sales.scss";
 
@@ -49,9 +54,13 @@ const currencyFormatter = new Intl.NumberFormat("es-AR", {
 
 export default function InvoicesList() {
   const [invoices, setInvoices] = useState([]);
+  const [clients, setClients] = useState([]);
   const [paymentSummaries, setPaymentSummaries] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [deleteError, setDeleteError] = useState(null);
+  const [modalError, setModalError] = useState(null);
+  const [submitAttempted, setSubmitAttempted] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
@@ -68,13 +77,13 @@ export default function InvoicesList() {
   });
   const [formData, setFormData] = useState({
     number: "",
-    clientName: "",
+    clientId: "",
     date: "",
     total: "",
     status: "draft",
   });
 
-  const fetchInvoices = () => {
+  const fetchInvoices = useCallback(() => {
     setLoading(true);
     setError(null);
     getInvoices()
@@ -89,11 +98,33 @@ export default function InvoicesList() {
         setError(err?.message || "Error al cargar facturas");
       })
       .finally(() => setLoading(false));
-  };
+  }, []);
   useEffect(() => {
     const t = setTimeout(() => fetchInvoices(), 0);
     return () => clearTimeout(t);
+  }, [fetchInvoices]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      getClients()
+        .then((data) => setClients(data))
+        .catch((err) => {
+          setError(err?.message || "Error al cargar clientes");
+        });
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
+
+  useEffect(() => {
+    const handleInvoicesChanged = () => fetchInvoices();
+    window.addEventListener("trebisacce:invoices-changed", handleInvoicesChanged);
+    return () => {
+      window.removeEventListener(
+        "trebisacce:invoices-changed",
+        handleInvoicesChanged
+      );
+    };
+  }, [fetchInvoices]);
 
   useEffect(() => {
     if (!openStatusId) return;
@@ -181,20 +212,23 @@ export default function InvoicesList() {
       `¿Eliminar la factura ${invoice.number}? Esta acción no se puede deshacer.`
     );
     if (!ok) return;
+    setDeleteError(null);
     deleteInvoice(invoice.id)
       .then(() => {
         setInvoices((prev) => prev.filter((item) => item.id !== invoice.id));
       })
       .catch((err) => {
-        setError(err?.message || "Error al eliminar factura");
+        setDeleteError(err?.message || "Error al eliminar factura");
       });
   };
 
   const handleOpenModal = () => {
     setError(null);
+    setModalError(null);
+    setSubmitAttempted(false);
     setFormData({
       number: "",
-      clientName: "",
+      clientId: "",
       date: "",
       total: "",
       status: "draft",
@@ -210,26 +244,30 @@ export default function InvoicesList() {
   const handleFieldChange = (event) => {
     const { name, value } = event.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    if (modalError) setModalError(null);
   };
 
   const handleSubmit = (event) => {
     event.preventDefault();
     const totalValue = Number(formData.total);
+    setSubmitAttempted(true);
     if (
       !formData.number ||
-      !formData.clientName ||
+      !formData.clientId ||
       !formData.date ||
       formData.total === "" ||
       Number.isNaN(totalValue)
     ) {
-      setError("Completá número, cliente, fecha y total.");
+      setModalError("Completá número, cliente, fecha y total.");
       return;
     }
+    const selectedClient = clients.find((client) => client.id === formData.clientId);
     setIsSaving(true);
-    setError(null);
+    setModalError(null);
     createInvoice({
       number: formData.number,
-      clientName: formData.clientName,
+      clientId: formData.clientId,
+      clientName: selectedClient?.name || undefined,
       date: formData.date,
       status: formData.status,
       total: totalValue,
@@ -239,7 +277,7 @@ export default function InvoicesList() {
         setIsModalOpen(false);
       })
       .catch((err) => {
-        setError(err?.message || "Error al guardar factura");
+        setModalError(err?.message || "Error al guardar factura");
       })
       .finally(() => setIsSaving(false));
   };
@@ -387,6 +425,13 @@ export default function InvoicesList() {
       const columnIndex = {
         number: findColumnIndex(headers, ["Número", "Nro", "Factura", "Number"]),
         clientName: findColumnIndex(headers, ["Cliente", "Client"]),
+        clientId: findColumnIndex(headers, [
+          "Cliente ID",
+          "ClienteId",
+          "Client ID",
+          "ClientId",
+          "ID Cliente",
+        ]),
         date: findColumnIndex(headers, ["Fecha", "Date"]),
         total: findColumnIndex(headers, ["Total", "Importe", "Amount"]),
         status: findColumnIndex(headers, ["Estado", "Status"]),
@@ -408,6 +453,8 @@ export default function InvoicesList() {
           columnIndex.number >= 0 ? row[columnIndex.number] : "";
         const clientValue =
           columnIndex.clientName >= 0 ? row[columnIndex.clientName] : "";
+        const clientIdValue =
+          columnIndex.clientId >= 0 ? row[columnIndex.clientId] : "";
         const dateValue = columnIndex.date >= 0 ? row[columnIndex.date] : "";
         const totalValue = columnIndex.total >= 0 ? row[columnIndex.total] : "";
         const statusValue =
@@ -415,13 +462,16 @@ export default function InvoicesList() {
 
         const normalizedNumber = numberValue?.toString().trim();
         const normalizedClient = clientValue?.toString().trim();
+        const normalizedClientId = clientIdValue?.toString().trim();
         const normalizedDate = formatDateValue(dateValue);
         const normalizedTotal = normalizeTotalValue(totalValue);
         const normalizedStatus = normalizeStatusValue(statusValue);
 
         const rowErrors = [];
         if (!normalizedNumber) rowErrors.push("falta Número");
-        if (!normalizedClient) rowErrors.push("falta Cliente");
+        if (!normalizedClient && !normalizedClientId) {
+          rowErrors.push("falta Cliente");
+        }
         if (!normalizedDate) rowErrors.push("falta Fecha");
         if (Number.isNaN(normalizedTotal) || normalizedTotal < 0) {
           rowErrors.push("Total inválido");
@@ -436,9 +486,26 @@ export default function InvoicesList() {
         }
 
         try {
+          let resolvedClientId = normalizedClientId;
+          let resolvedClientName = normalizedClient;
+
+          if (resolvedClientId && !resolvedClientName) {
+            const client = getClientById(resolvedClientId);
+            if (client?.name) {
+              resolvedClientName = client.name;
+            }
+          }
+
+          if (!resolvedClientId && normalizedClient) {
+            const client = await getOrCreateClientByName(normalizedClient);
+            resolvedClientId = client.id;
+            resolvedClientName = client.name;
+          }
+
           await createInvoice({
             number: normalizedNumber,
-            clientName: normalizedClient,
+            clientName: resolvedClientName,
+            clientId: resolvedClientId || undefined,
             date: normalizedDate,
             total: normalizedTotal,
             status: normalizedStatus,
@@ -534,6 +601,14 @@ export default function InvoicesList() {
     });
   }, [sortConfig]);
 
+  const sortedClients = useMemo(() => {
+    const list = [...clients];
+    list.sort((a, b) =>
+      (a.name || "").localeCompare(b.name || "", "es", { sensitivity: "base" })
+    );
+    return list;
+  }, [clients]);
+
   const rows = sortedInvoices.map((invoice) => ({
     id: invoice.id,
     cells: [
@@ -577,6 +652,12 @@ export default function InvoicesList() {
 
   const showEmpty = !loading && !error && invoices.length === 0;
   const showTable = !loading && !error && invoices.length > 0;
+  const totalValue = Number(formData.total);
+  const isNumberInvalid = submitAttempted && !formData.number.trim();
+  const isClientInvalid = submitAttempted && !formData.clientId;
+  const isDateInvalid = submitAttempted && !formData.date;
+  const isTotalInvalid =
+    submitAttempted && (formData.total === "" || Number.isNaN(totalValue));
 
   return (
     <section className="app-page sales-page--invoices">
@@ -653,6 +734,7 @@ export default function InvoicesList() {
       )}
 
       {showTable && <DataTable columns={columns} rows={rows} />}
+      {deleteError && <p className="sales__action-error">{deleteError}</p>}
       {(() => {
         const openInvoice = invoices.find((invoice) => invoice.id === openStatusId);
         if (!openInvoice) return null;
@@ -708,17 +790,33 @@ export default function InvoicesList() {
                   value={formData.number}
                   onChange={handleFieldChange}
                   placeholder="Ej: F-2025-0047"
+                  className={isNumberInvalid ? "sales__field-invalid" : ""}
                 />
+                {isNumberInvalid && (
+                  <span className="sales__field-error">Obligatorio</span>
+                )}
               </label>
               <label className="sales__modal-field">
                 <span>Cliente</span>
-                <input
-                  type="text"
-                  name="clientName"
-                  value={formData.clientName}
+                <select
+                  name="clientId"
+                  value={formData.clientId}
                   onChange={handleFieldChange}
-                  placeholder="Ej: Acme Corp"
-                />
+                  className={isClientInvalid ? "sales__field-invalid" : ""}
+                >
+                  <option value="">Seleccioná un cliente...</option>
+                  {sortedClients.map((client) => (
+                    <option key={client.id} value={client.id}>
+                      {client.name}
+                    </option>
+                  ))}
+                </select>
+                <span className="sales__modal-hint">
+                  Si el cliente no existe, crealo desde Contactos.
+                </span>
+                {isClientInvalid && (
+                  <span className="sales__field-error">Obligatorio</span>
+                )}
               </label>
               <label className="sales__modal-field">
                 <span>Fecha</span>
@@ -727,7 +825,11 @@ export default function InvoicesList() {
                   name="date"
                   value={formData.date}
                   onChange={handleFieldChange}
+                  className={isDateInvalid ? "sales__field-invalid" : ""}
                 />
+                {isDateInvalid && (
+                  <span className="sales__field-error">Obligatorio</span>
+                )}
               </label>
               <label className="sales__modal-field">
                 <span>Total</span>
@@ -739,7 +841,11 @@ export default function InvoicesList() {
                   min="0"
                   step="1"
                   placeholder="Ej: 125000"
+                  className={isTotalInvalid ? "sales__field-invalid" : ""}
                 />
+                {isTotalInvalid && (
+                  <span className="sales__field-error">Total inválido</span>
+                )}
               </label>
               <label className="sales__modal-field">
                 <span>Estado</span>
@@ -771,6 +877,7 @@ export default function InvoicesList() {
                 />
               </div>
             </form>
+            {modalError && <p className="sales__modal-error">{modalError}</p>}
           </div>
         </div>
       )}

@@ -1,3 +1,5 @@
+import { findClientByName, getClientById } from './clients.service.js';
+
 const STORAGE_KEY = 'trebisacce_quotes';
 const LATENCY_MIN = 300;
 const LATENCY_MAX = 500;
@@ -54,11 +56,28 @@ function writeQuotes(list) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
 }
 
+
+function hydrateClientName(entity) {
+  if (!entity) return entity;
+  if (entity.clientName) return entity;
+  if (entity.clientId) {
+    const client = getClientById(entity.clientId);
+    if (client?.name) return { ...entity, clientName: client.name };
+  }
+  return entity;
+}
+
+function resolveClientIdByName(name) {
+  if (!name) return '';
+  const client = findClientByName(name);
+  return client?.id || '';
+}
 function sanitizeQuote(data) {
   if (!data || typeof data !== 'object') return {};
   const allowed = {};
   if (data.id !== undefined) allowed.id = data.id;
   if (data.clientName !== undefined) allowed.clientName = data.clientName;
+  if (data.clientId !== undefined) allowed.clientId = data.clientId;
   if (data.date !== undefined) allowed.date = data.date;
   if (data.status !== undefined) allowed.status = normalizeStatus(data.status);
   if (data.total !== undefined) allowed.total = data.total;
@@ -68,7 +87,7 @@ function sanitizeQuote(data) {
 export function getQuotes() {
   return withLatency(() => {
     const quotes = readQuotes().map((quote) => ({
-      ...quote,
+      ...hydrateClientName(quote),
       status: normalizeStatus(quote.status),
     }));
     quotes.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
@@ -80,8 +99,10 @@ export function createQuote(quoteData) {
   return withLatency(() => {
     const quotes = readQuotes();
     const clean = sanitizeQuote(quoteData);
+    const resolvedClientId = clean.clientId || resolveClientIdByName(clean.clientName);
     const newQuote = {
       ...clean,
+      clientId: resolvedClientId || clean.clientId,
       status: clean.status || 'sent',
       id: clean.id || `quo-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
     };
@@ -98,7 +119,8 @@ export function updateQuote(id, partialData) {
     const index = quotes.findIndex((quote) => quote.id === id);
     if (index === -1) throw new Error('Quote not found');
     const updates = sanitizeQuote(partialData);
-    const updated = { ...quotes[index], ...updates, id: quotes[index].id };
+    const resolvedClientId = updates.clientId || resolveClientIdByName(updates.clientName);
+    const updated = { ...quotes[index], ...updates, clientId: resolvedClientId || updates.clientId, id: quotes[index].id };
     if (updated.status) {
       updated.status = normalizeStatus(updated.status);
     }

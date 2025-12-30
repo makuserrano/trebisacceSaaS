@@ -1,4 +1,7 @@
+import { findClientByName, getClientById } from './clients.service.js';
+
 const STORAGE_KEY = 'trebisacce_invoices';
+const PAYMENTS_STORAGE_KEY = 'trebisacce_payments_v1';
 const LATENCY_MIN = 300;
 const LATENCY_MAX = 500;
 
@@ -42,12 +45,36 @@ function writeInvoices(list) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
 }
 
+
+function hydrateClientName(entity) {
+  if (!entity) return entity;
+  if (entity.clientName) return entity;
+  if (entity.clientId) {
+    const client = getClientById(entity.clientId);
+    if (client?.name) return { ...entity, clientName: client.name };
+  }
+  return entity;
+}
+
+function resolveClientIdByName(name) {
+  if (!name) return '';
+  const client = findClientByName(name);
+  return client?.id || '';
+}
+const INVOICES_CHANGED_EVENT = 'trebisacce:invoices-changed';
+
+function emitInvoicesChanged() {
+  if (typeof window === 'undefined') return;
+  window.dispatchEvent(new Event(INVOICES_CHANGED_EVENT));
+}
+
 function sanitizeInvoice(data) {
   if (!data || typeof data !== 'object') return {};
   const allowed = {};
   if (data.id !== undefined) allowed.id = data.id;
   if (data.number !== undefined) allowed.number = data.number;
   if (data.clientName !== undefined) allowed.clientName = data.clientName;
+  if (data.clientId !== undefined) allowed.clientId = data.clientId;
   if (data.date !== undefined) allowed.date = data.date;
   if (data.status !== undefined) allowed.status = data.status;
   if (data.total !== undefined) allowed.total = data.total;
@@ -58,7 +85,7 @@ function sanitizeInvoice(data) {
 
 export function getInvoices() {
   return withLatency(() => {
-    const invoices = readInvoices().map((inv) => ({ ...inv }));
+    const invoices = readInvoices().map((inv) => hydrateClientName({ ...inv }));
     invoices.sort((a, b) => {
       const dateCompare = (b.date || '').localeCompare(a.date || '');
       if (dateCompare !== 0) return dateCompare;
@@ -74,11 +101,13 @@ export function createInvoice(invoiceData) {
   return withLatency(() => {
     const invoices = readInvoices();
     const clean = sanitizeInvoice(invoiceData);
+    const resolvedClientId = clean.clientId || resolveClientIdByName(clean.clientName);
     const now = Date.now();
     const createdAt = clean.createdAt ?? now;
     const updatedAt = clean.updatedAt ?? createdAt;
     const newInvoice = {
       ...clean,
+      clientId: resolvedClientId || clean.clientId,
       id: clean.id || `inv-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
       createdAt,
       updatedAt,
@@ -96,7 +125,8 @@ export function updateInvoice(id, partialData) {
     const index = invoices.findIndex((inv) => inv.id === id);
     if (index === -1) throw new Error('Invoice not found');
     const updates = sanitizeInvoice(partialData);
-    const updated = { ...invoices[index], ...updates, id: invoices[index].id };
+    const resolvedClientId = updates.clientId || resolveClientIdByName(updates.clientName);
+    const updated = { ...invoices[index], ...updates, clientId: resolvedClientId || updates.clientId, id: invoices[index].id };
     invoices[index] = updated;
     writeInvoices(invoices);
     return { ...updated };
@@ -124,6 +154,7 @@ export function updateInvoiceStatus(id, status) {
   };
   invoices[index] = updated;
   writeInvoices(invoices);
+  emitInvoicesChanged();
   return { ...updated };
 }
 
@@ -131,6 +162,20 @@ export function deleteInvoice(id) {
   return withLatency(() => {
     if (!id) throw new Error('Invoice id is required');
     const invoices = readInvoices();
+    const rawPayments = localStorage.getItem(PAYMENTS_STORAGE_KEY);
+    if (rawPayments) {
+      try {
+        const payments = JSON.parse(rawPayments);
+        if (Array.isArray(payments)) {
+          const hasPayments = payments.some((payment) => payment?.invoiceId === id);
+          if (hasPayments) {
+            throw new Error('No se puede eliminar una factura con pagos registrados');
+          }
+        }
+      } catch (err) {
+        if (err?.message) throw err;
+      }
+    }
     const nextInvoices = invoices.filter((inv) => inv.id !== id);
     if (nextInvoices.length === invoices.length) {
       throw new Error('Invoice not found');

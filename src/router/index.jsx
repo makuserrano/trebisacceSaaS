@@ -8,8 +8,9 @@ import ProductsList from '../pages/app/Products/ProductsList.jsx';
 import QuotesList from '../pages/app/Sales/QuotesList.jsx';
 import InvoicesList from '../pages/app/Sales/InvoicesList.jsx';
 import SalesOverview from '../pages/app/Sales/SalesOverview.jsx';
-import Accounts from '../pages/app/Treasury/Accounts.jsx';
-import Movements from '../pages/app/Treasury/Movements.jsx';
+import TreasuryOverview from '../pages/app/Treasury/TreasuryOverview.jsx';
+import AccountsList from '../pages/app/Treasury/AccountsList.jsx';
+import TransactionsList from '../pages/app/Treasury/TransactionsList.jsx';
 import PaymentsList from '../pages/app/Treasury/PaymentsList.jsx';
 import DecisionsList from '../pages/app/Decisions/DecisionsList.jsx';
 
@@ -57,12 +58,16 @@ const router = createBrowserRouter([
         element: <InvoicesList />,
       },
       {
+        path: 'tesoreria',
+        element: <TreasuryOverview />,
+      },
+      {
         path: 'tesoreria/cuentas',
-        element: <Accounts />,
+        element: <AccountsList />,
       },
       {
         path: 'tesoreria/movimientos',
-        element: <Movements />,
+        element: <TransactionsList />,
       },
       {
         path: 'tesoreria/pagos',

@@ -116,13 +116,32 @@ function normalizeDate(value) {
   return '';
 }
 
+function normalizeAmount(value) {
+  if (typeof value === 'number') return value;
+  if (typeof value === 'string') {
+    let cleaned = value.trim();
+    if (!cleaned) return Number.NaN;
+    cleaned = cleaned.replace(/[^\d,.-]/g, '');
+    if (!cleaned) return Number.NaN;
+    const hasComma = cleaned.includes(',');
+    const hasDot = cleaned.includes('.');
+    if (hasComma && hasDot) {
+      cleaned = cleaned.replace(/\./g, '').replace(',', '.');
+    } else if (hasComma) {
+      cleaned = cleaned.replace(',', '.');
+    }
+    return Number(cleaned);
+  }
+  return Number.NaN;
+}
+
 function sanitizePayment(data) {
   if (!data || typeof data !== 'object') return {};
   const allowed = {};
   if (data.id !== undefined) allowed.id = data.id;
   if (data.invoiceId !== undefined) allowed.invoiceId = data.invoiceId;
   if (data.date !== undefined) allowed.date = normalizeDate(data.date);
-  if (data.amount !== undefined) allowed.amount = Number(data.amount);
+  if (data.amount !== undefined) allowed.amount = normalizeAmount(data.amount);
   if (data.method !== undefined) allowed.method = normalizeMethod(data.method);
   if (data.reference !== undefined) allowed.reference = data.reference;
   if (data.notes !== undefined) allowed.notes = data.notes;
@@ -134,7 +153,7 @@ function sanitizePayment(data) {
 function getPaidAmountFromList(list, invoiceId) {
   return list
     .filter((item) => item.invoiceId === invoiceId)
-    .reduce((acc, item) => acc + (Number(item.amount) || 0), 0);
+    .reduce((acc, item) => acc + (normalizeAmount(item.amount) || 0), 0);
 }
 
 function computeNextStatus(invoice, paidAmount) {
@@ -165,7 +184,12 @@ function validatePayment(data) {
 }
 
 function recalculateInvoiceStatus(invoiceId, paymentsList) {
-  const invoice = getInvoiceSnapshot(invoiceId);
+  let invoice;
+  try {
+    invoice = getInvoiceSnapshot(invoiceId);
+  } catch (err) {
+    return;
+  }
   const paidAmount = getPaidAmountFromList(paymentsList, invoiceId);
   const nextStatus = computeNextStatus(invoice, paidAmount);
   updateInvoiceStatus(invoiceId, nextStatus);
@@ -215,6 +239,29 @@ export function getInvoicePaymentSummaries(invoiceIds = []) {
       };
     });
     return summaries;
+  });
+}
+
+export function getPaymentsSummary(filter = {}) {
+  return withLatency(() => {
+    const payments = readPayments();
+    const { startDate, endDate } = filter || {};
+    let total = 0;
+    const byMethod = {};
+    payments.forEach((payment) => {
+      const date = payment.date || '';
+      if (startDate && date < startDate) return;
+      if (endDate && date > endDate) return;
+      const amount = normalizeAmount(payment.amount) || 0;
+      total += amount;
+      const method = payment.method || 'other';
+      byMethod[method] = (byMethod[method] || 0) + amount;
+    });
+    const methodSeries = Object.entries(byMethod).map(([method, value]) => ({
+      method,
+      value,
+    }));
+    return { total, byMethod: methodSeries };
   });
 }
 

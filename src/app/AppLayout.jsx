@@ -20,10 +20,12 @@ const navSections = [
   {
     label: 'Tesorería',
     icon: 'wallet',
+    to: '/app/tesoreria',
     children: [
-      { label: 'Cuentas', to: '/app/tesoreria/cuentas' },
-      { label: 'Movimientos', to: '/app/tesoreria/movimientos' },
+      { label: 'Resumen', to: '/app/tesoreria' },
       { label: 'Pagos', to: '/app/tesoreria/pagos' },
+      { label: 'Movimientos', to: '/app/tesoreria/movimientos' },
+      { label: 'Cuentas', to: '/app/tesoreria/cuentas' },
     ],
   },
   { label: 'Decisiones', to: '/app/decisiones', icon: 'flag' },

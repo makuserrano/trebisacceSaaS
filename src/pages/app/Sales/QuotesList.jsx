@@ -6,6 +6,11 @@ import PrimaryButton from "../../../components/app/PrimaryButton.jsx";
 import StatusBadge from "../../../components/app/StatusBadge.jsx";
 import { createInvoice } from "../../../services/invoices.service.js";
 import {
+  getClientById,
+  getClients,
+  getOrCreateClientByName,
+} from "../../../services/clients.service.js";
+import {
   createQuote,
   getQuotes,
   removeQuote,
@@ -36,8 +41,11 @@ const currencyFormatter = new Intl.NumberFormat("es-AR", {
 
 export default function QuotesList() {
   const [quotes, setQuotes] = useState([]);
+  const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [modalError, setModalError] = useState(null);
+  const [submitAttempted, setSubmitAttempted] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
@@ -45,7 +53,7 @@ export default function QuotesList() {
   const [importFeedback, setImportFeedback] = useState(null);
   const fileInputRef = useRef(null);
   const [formData, setFormData] = useState({
-    clientName: "",
+    clientId: "",
     date: "",
     total: "",
   });
@@ -69,6 +77,17 @@ export default function QuotesList() {
   }, []);
 
   useEffect(() => {
+    const timer = setTimeout(() => {
+      getClients()
+        .then((data) => setClients(data))
+        .catch((err) => {
+          setError(err?.message || "Error al cargar clientes");
+        });
+    }, 0);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
     if (!isModalOpen) return;
     const handleKeyDown = (event) => {
       if (event.key === "Escape" && !isSaving) {
@@ -81,8 +100,10 @@ export default function QuotesList() {
 
   const handleOpenModal = () => {
     setError(null);
+    setModalError(null);
+    setSubmitAttempted(false);
     setFormData({
-      clientName: "",
+      clientId: "",
       date: "",
       total: "",
     });
@@ -97,23 +118,27 @@ export default function QuotesList() {
   const handleFieldChange = (event) => {
     const { name, value } = event.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    if (modalError) setModalError(null);
   };
 
   const handleSubmit = (event) => {
     event.preventDefault();
     const totalValue = Number(formData.total);
-    if (!formData.clientName || !formData.date || formData.total === "") {
-      setError("Completá cliente, fecha y total.");
+    setSubmitAttempted(true);
+    if (!formData.clientId || !formData.date || formData.total === "") {
+      setModalError("Completá cliente, fecha y total.");
       return;
     }
     if (Number.isNaN(totalValue) || totalValue < 0) {
-      setError("El total ingresado no es válido.");
+      setModalError("El total ingresado no es válido.");
       return;
     }
+    const selectedClient = clients.find((client) => client.id === formData.clientId);
     setIsSaving(true);
-    setError(null);
+    setModalError(null);
     createQuote({
-      clientName: formData.clientName,
+      clientId: formData.clientId,
+      clientName: selectedClient?.name || undefined,
       date: formData.date,
       total: totalValue,
       status: "sent",
@@ -123,7 +148,7 @@ export default function QuotesList() {
         setIsModalOpen(false);
       })
       .catch((err) => {
-        setError(err?.message || "Error al guardar presupuesto");
+        setModalError(err?.message || "Error al guardar presupuesto");
       })
       .finally(() => setIsSaving(false));
   };
@@ -135,6 +160,7 @@ export default function QuotesList() {
     createInvoice({
       number: `F-${Date.now()}`,
       clientName: quote.clientName,
+      clientId: quote.clientId,
       total: quote.total,
       date: quote.date,
       status: "issued",
@@ -308,6 +334,13 @@ export default function QuotesList() {
       const columnIndex = {
         id: findColumnIndex(headers, ["ID", "Id", "Identificador"]),
         clientName: findColumnIndex(headers, ["Cliente", "Client"]),
+        clientId: findColumnIndex(headers, [
+          "Cliente ID",
+          "ClienteId",
+          "Client ID",
+          "ClientId",
+          "ID Cliente",
+        ]),
         date: findColumnIndex(headers, ["Fecha", "Date"]),
         total: findColumnIndex(headers, ["Total", "Importe", "Amount"]),
         status: findColumnIndex(headers, ["Estado", "Status"]),
@@ -328,6 +361,8 @@ export default function QuotesList() {
         const idValue = columnIndex.id >= 0 ? row[columnIndex.id] : "";
         const clientValue =
           columnIndex.clientName >= 0 ? row[columnIndex.clientName] : "";
+        const clientIdValue =
+          columnIndex.clientId >= 0 ? row[columnIndex.clientId] : "";
         const dateValue = columnIndex.date >= 0 ? row[columnIndex.date] : "";
         const totalValue = columnIndex.total >= 0 ? row[columnIndex.total] : "";
         const statusValue =
@@ -335,12 +370,15 @@ export default function QuotesList() {
 
         const normalizedId = idValue?.toString().trim();
         const normalizedClient = clientValue?.toString().trim();
+        const normalizedClientId = clientIdValue?.toString().trim();
         const normalizedDate = formatDateValue(dateValue);
         const normalizedTotal = normalizeTotalValue(totalValue);
         const normalizedStatus = normalizeStatusValue(statusValue);
 
         const rowErrors = [];
-        if (!normalizedClient) rowErrors.push("falta Cliente");
+        if (!normalizedClient && !normalizedClientId) {
+          rowErrors.push("falta Cliente");
+        }
         if (!normalizedDate) rowErrors.push("falta Fecha");
         if (Number.isNaN(normalizedTotal) || normalizedTotal < 0) {
           rowErrors.push("Total inválido");
@@ -355,8 +393,25 @@ export default function QuotesList() {
         }
 
         try {
+          let resolvedClientId = normalizedClientId;
+          let resolvedClientName = normalizedClient;
+
+          if (resolvedClientId && !resolvedClientName) {
+            const client = getClientById(resolvedClientId);
+            if (client?.name) {
+              resolvedClientName = client.name;
+            }
+          }
+
+          if (!resolvedClientId && normalizedClient) {
+            const client = await getOrCreateClientByName(normalizedClient);
+            resolvedClientId = client.id;
+            resolvedClientName = client.name;
+          }
+
           const payload = {
-            clientName: normalizedClient,
+            clientName: resolvedClientName,
+            clientId: resolvedClientId || undefined,
             date: normalizedDate,
             total: normalizedTotal,
             status: normalizedStatus,
@@ -390,6 +445,14 @@ export default function QuotesList() {
   const sortedQuotes = useMemo(() => {
     return [...quotes].sort((a, b) => (b.date || "").localeCompare(a.date || ""));
   }, [quotes]);
+
+  const sortedClients = useMemo(() => {
+    const list = [...clients];
+    list.sort((a, b) =>
+      (a.name || "").localeCompare(b.name || "", "es", { sensitivity: "base" })
+    );
+    return list;
+  }, [clients]);
 
   const rows = sortedQuotes.map((quote) => {
     const isConverted = quote.status === "converted";
@@ -436,6 +499,11 @@ export default function QuotesList() {
 
   const showEmpty = !loading && !error && quotes.length === 0;
   const showTable = !loading && !error && quotes.length > 0;
+  const totalValue = Number(formData.total);
+  const isClientInvalid = submitAttempted && !formData.clientId;
+  const isDateInvalid = submitAttempted && !formData.date;
+  const isTotalInvalid =
+    submitAttempted && (formData.total === "" || Number.isNaN(totalValue));
 
   return (
     <section className="app-page sales-page--quotes">
@@ -529,13 +597,25 @@ export default function QuotesList() {
             <form className="sales__modal-form" onSubmit={handleSubmit}>
               <label className="sales__modal-field">
                 <span>Cliente</span>
-                <input
-                  type="text"
-                  name="clientName"
-                  value={formData.clientName}
+                <select
+                  name="clientId"
+                  value={formData.clientId}
                   onChange={handleFieldChange}
-                  placeholder="Ej: Acme Corp"
-                />
+                  className={isClientInvalid ? "sales__field-invalid" : ""}
+                >
+                  <option value="">Seleccioná un cliente...</option>
+                  {sortedClients.map((client) => (
+                    <option key={client.id} value={client.id}>
+                      {client.name}
+                    </option>
+                  ))}
+                </select>
+                <span className="sales__modal-hint">
+                  Si el cliente no existe, crealo desde Contactos.
+                </span>
+                {isClientInvalid && (
+                  <span className="sales__field-error">Obligatorio</span>
+                )}
               </label>
               <label className="sales__modal-field">
                 <span>Fecha</span>
@@ -544,7 +624,11 @@ export default function QuotesList() {
                   name="date"
                   value={formData.date}
                   onChange={handleFieldChange}
+                  className={isDateInvalid ? "sales__field-invalid" : ""}
                 />
+                {isDateInvalid && (
+                  <span className="sales__field-error">Obligatorio</span>
+                )}
               </label>
               <label className="sales__modal-field">
                 <span>Total</span>
@@ -556,7 +640,11 @@ export default function QuotesList() {
                   min="0"
                   step="1"
                   placeholder="Ej: 125000"
+                  className={isTotalInvalid ? "sales__field-invalid" : ""}
                 />
+                {isTotalInvalid && (
+                  <span className="sales__field-error">Total inválido</span>
+                )}
               </label>
               <div className="sales__modal-actions">
                 <button
@@ -574,6 +662,7 @@ export default function QuotesList() {
                 />
               </div>
             </form>
+            {modalError && <p className="sales__modal-error">{modalError}</p>}
           </div>
         </div>
       )}

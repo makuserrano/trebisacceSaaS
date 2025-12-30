@@ -316,6 +316,12 @@
   color: var(--muted);
 }
 
+.sales__action-error {
+  margin: 8px 0 0;
+  color: #ffb3b3;
+  font-size: 13px;
+}
+
 .sales__modal-backdrop {
   position: fixed;
   inset: 0;
@@ -352,6 +358,11 @@
   display: grid;
   gap: 8px;
   font-size: 14px;
+}
+
+.sales__modal-hint {
+  font-size: 12px;
+  color: var(--muted);
 }
 
 .sales__modal-field input,
@@ -412,6 +423,21 @@
   appearance: none;
   -webkit-appearance: none;
   -moz-appearance: none;
+}
+
+.sales__field-error {
+  font-size: 12px;
+  color: #ffb3b3;
+}
+
+.sales__field-invalid {
+  border-color: rgba(235, 94, 40, 0.6);
+}
+
+.sales__modal-error {
+  margin: 12px 0 0;
+  font-size: 13px;
+  color: #ffb3b3;
 }
 
 .sales-overview__actions {

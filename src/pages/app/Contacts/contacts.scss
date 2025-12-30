@@ -2,3 +2,120 @@
   display: flex;
   justify-content: flex-start;
 }
+
+.contacts__action-cell {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.contacts__inline-action {
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+  color: var(--text);
+  padding: 6px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.contacts__inline-action:hover,
+.contacts__inline-action:focus-visible {
+  border-color: color-mix(in srgb, var(--accent) 70%, transparent);
+  background: color-mix(in srgb, var(--surface) 70%, var(--bg));
+  outline: none;
+}
+
+.contacts__modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  background: rgba(37, 36, 34, 0.72);
+  display: grid;
+  place-items: center;
+  padding: 16px;
+}
+
+.contacts__modal {
+  width: min(520px, 100%);
+  background: #403d39;
+  color: #fffcf2;
+  border: 1px solid rgba(255, 252, 242, 0.08);
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+}
+
+.contacts__modal-title {
+  margin: 0 0 16px;
+  font-size: 22px;
+  letter-spacing: -0.01em;
+}
+
+.contacts__modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.contacts__modal-field {
+  display: grid;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.contacts__modal-field input,
+.contacts__modal-field select {
+  width: 100%;
+  background: rgba(255, 252, 242, 0.06);
+  color: #fffcf2;
+  border: 1px solid rgba(255, 252, 242, 0.16);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font: inherit;
+}
+
+.contacts__modal-field input::placeholder {
+  color: rgba(255, 252, 242, 0.5);
+}
+
+.contacts__modal-field input:focus,
+.contacts__modal-field select:focus {
+  outline: 2px solid rgba(235, 94, 40, 0.6);
+  outline-offset: 2px;
+  border-color: rgba(235, 94, 40, 0.6);
+}
+
+.contacts__modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 6px;
+}
+
+.contacts__modal-cancel {
+  background: transparent;
+  color: #fffcf2;
+  border: 1px solid rgba(255, 252, 242, 0.2);
+  border-radius: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.contacts__modal-field select option {
+  background-color: #403d39;
+  color: #fffcf2;
+}
+
+.contacts__field-error {
+  font-size: 12px;
+  color: #ffb3b3;
+}
+
+.contacts__modal-error {
+  margin: 12px 0 0;
+  font-size: 13px;
+  color: #ffb3b3;
+}
