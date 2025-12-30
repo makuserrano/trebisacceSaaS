@@ -69,7 +69,7 @@ function readClients() {
   try {
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed)) return parsed;
-  } catch (err) {
+  } catch  {
     // fall through to reset if corrupted
   }
   localStorage.setItem(STORAGE_KEY, JSON.stringify(seedClients));
@@ -119,7 +119,7 @@ function readStorageList(key) {
   try {
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed)) return parsed;
-  } catch (err) {
+  } catch {
     return [];
   }
   return [];

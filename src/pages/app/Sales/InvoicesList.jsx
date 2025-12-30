@@ -9,6 +9,7 @@ import {
   createInvoice,
   deleteInvoice,
   getInvoices,
+  normalizeInvoiceDate,
   updateInvoice,
 } from "../../../services/invoices.service.js";
 import {
@@ -261,6 +262,10 @@ export default function InvoicesList() {
       setModalError("Completá número, cliente, fecha y total.");
       return;
     }
+    if (totalValue <= 0) {
+      setModalError("El total debe ser mayor a 0.");
+      return;
+    }
     const selectedClient = clients.find((client) => client.id === formData.clientId);
     setIsSaving(true);
     setModalError(null);
@@ -296,42 +301,6 @@ export default function InvoicesList() {
   const findColumnIndex = (headers, names) => {
     const normalizedNames = names.map(normalizeHeader);
     return headers.findIndex((header) => normalizedNames.includes(header));
-  };
-
-  const formatDateValue = (value) => {
-    if (!value && value !== 0) return "";
-    if (value instanceof Date && !Number.isNaN(value.getTime())) {
-      return value.toISOString().slice(0, 10);
-    }
-    if (typeof value === "number") {
-      const parsed = XLSX.SSF.parse_date_code(value);
-      if (parsed?.y && parsed?.m && parsed?.d) {
-        const date = new Date(Date.UTC(parsed.y, parsed.m - 1, parsed.d));
-        return date.toISOString().slice(0, 10);
-      }
-    }
-    if (typeof value === "string") {
-      const trimmed = value.trim();
-      if (!trimmed) return "";
-      if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return trimmed;
-      const slashMatch = trimmed.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})$/);
-      if (slashMatch) {
-        const day = Number(slashMatch[1]);
-        const month = Number(slashMatch[2]);
-        let year = Number(slashMatch[3]);
-        if (year < 100) year += 2000;
-        if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
-          return `${year.toString().padStart(4, "0")}-${month
-            .toString()
-            .padStart(2, "0")}-${day.toString().padStart(2, "0")}`;
-        }
-      }
-      const parsed = new Date(trimmed);
-      if (!Number.isNaN(parsed.getTime())) {
-        return parsed.toISOString().slice(0, 10);
-      }
-    }
-    return "";
   };
 
   const normalizeTotalValue = (value) => {
@@ -463,7 +432,7 @@ export default function InvoicesList() {
         const normalizedNumber = numberValue?.toString().trim();
         const normalizedClient = clientValue?.toString().trim();
         const normalizedClientId = clientIdValue?.toString().trim();
-        const normalizedDate = formatDateValue(dateValue);
+        const normalizedDate = normalizeInvoiceDate(dateValue);
         const normalizedTotal = normalizeTotalValue(totalValue);
         const normalizedStatus = normalizeStatusValue(statusValue);
 
@@ -657,7 +626,8 @@ export default function InvoicesList() {
   const isClientInvalid = submitAttempted && !formData.clientId;
   const isDateInvalid = submitAttempted && !formData.date;
   const isTotalInvalid =
-    submitAttempted && (formData.total === "" || Number.isNaN(totalValue));
+    submitAttempted &&
+    (formData.total === "" || Number.isNaN(totalValue) || totalValue <= 0);
 
   return (
     <section className="app-page sales-page--invoices">

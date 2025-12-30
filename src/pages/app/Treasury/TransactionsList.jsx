@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import DataTable from '../../../components/app/DataTable.jsx';
 import PageHeader from '../../../components/app/PageHeader.jsx';
 import PrimaryButton from '../../../components/app/PrimaryButton.jsx';
@@ -75,7 +75,7 @@ export default function TransactionsList() {
     description: '',
   });
 
-  const fetchData = () => {
+  const fetchData = useCallback(() => {
     setLoading(true);
     setError(null);
     const typeFilter = tab === 'todos' ? '' : tab;
@@ -99,12 +99,11 @@ export default function TransactionsList() {
       .then((data) => setBalances(data))
       .catch((err) => setError(err?.message || 'Error al cargar movimientos'))
       .finally(() => setLoading(false));
-  };
+  }, [filters.accountId, filters.endDate, filters.startDate, tab]);
 
   useEffect(() => {
-    const timer = setTimeout(() => fetchData(), 0);
-    return () => clearTimeout(timer);
-  }, [filters, tab]);
+    Promise.resolve().then(fetchData);
+  }, [fetchData]);
 
   useEffect(() => {
     if (!isModalOpen) return;

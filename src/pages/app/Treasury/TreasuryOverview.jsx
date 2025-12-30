@@ -46,7 +46,7 @@ export default function TreasuryOverview() {
     setError(null);
     getTreasuryOverview(range)
       .then((data) => setOverview(data))
-      .catch((err) => setError(err?.message || 'No se pudo cargar tesorer?a.'))
+      .catch((err) => setError(err?.message || 'No se pudo cargar tesorería.'))
       .finally(() => setLoading(false));
   }, [range]);
 

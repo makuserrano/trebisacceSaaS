@@ -31,7 +31,7 @@ function readAccounts() {
   try {
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed)) return parsed;
-  } catch (err) {
+  } catch  {
     // fall through to reset if corrupted
   }
   localStorage.setItem(STORAGE_KEY, JSON.stringify(seedAccounts));
@@ -91,7 +91,7 @@ function hasAccountTransactions(accountId) {
         tx?.fromAccountId === accountId ||
         tx?.toAccountId === accountId
     );
-  } catch (err) {
+  } catch  {
     return false;
   }
 }

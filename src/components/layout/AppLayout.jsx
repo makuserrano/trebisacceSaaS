@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
-import AppSidebar from '../components/layout/AppSidebar.jsx';
-import '../styles/app.scss';
+import AppSidebar from './AppSidebar.jsx';
+import '../../styles/app.scss';
 import './appLayout.scss';
 
 const navSections = [
@@ -22,7 +22,6 @@ const navSections = [
     icon: 'wallet',
     to: '/app/tesoreria',
     children: [
-      { label: 'Resumen', to: '/app/tesoreria' },
       { label: 'Pagos', to: '/app/tesoreria/pagos' },
       { label: 'Movimientos', to: '/app/tesoreria/movimientos' },
       { label: 'Cuentas', to: '/app/tesoreria/cuentas' },

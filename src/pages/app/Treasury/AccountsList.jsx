@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import DataTable from '../../../components/app/DataTable.jsx';
 import PageHeader from '../../../components/app/PageHeader.jsx';
 import PrimaryButton from '../../../components/app/PrimaryButton.jsx';
@@ -47,7 +47,7 @@ export default function AccountsList() {
     type: 'cash',
   });
 
-  const fetchAccounts = () => {
+  const fetchAccounts = useCallback(() => {
     setLoading(true);
     setError(null);
     getAccounts()
@@ -58,12 +58,12 @@ export default function AccountsList() {
       .then((data) => setBalances(data))
       .catch((err) => setError(err?.message || 'Error al cargar cuentas'))
       .finally(() => setLoading(false));
-  };
+  }, []);
 
   useEffect(() => {
     const timer = setTimeout(() => fetchAccounts(), 0);
     return () => clearTimeout(timer);
-  }, []);
+  }, [fetchAccounts]);
 
   useEffect(() => {
     if (!isModalOpen) return;
@@ -138,7 +138,7 @@ export default function AccountsList() {
       .finally(() => setIsSaving(false));
   };
 
-  const handleDeleteAccount = (account) => {
+  const handleDeleteAccount = useCallback((account) => {
     const ok = window.confirm(
       `¿Eliminar la cuenta ${account.name}? Esta acción no se puede deshacer.`
     );
@@ -151,7 +151,7 @@ export default function AccountsList() {
       .catch((err) => {
         setError(err?.message || 'Error al eliminar cuenta');
       });
-  };
+  }, [fetchAccounts]);
 
   const rows = useMemo(() => {
     return accounts.map((account) => ({
@@ -178,7 +178,7 @@ export default function AccountsList() {
         </div>,
       ],
     }));
-  }, [accounts, balances]);
+  }, [accounts, balances, handleDeleteAccount]);
 
   const showEmpty = !loading && !error && accounts.length === 0;
   const isNameInvalid = submitAttempted && !formData.name.trim();

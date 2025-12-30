@@ -76,7 +76,7 @@ function readPayments() {
   try {
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed)) return parsed;
-  } catch (err) {
+  } catch  {
     // fall through to reset if corrupted
   }
   localStorage.setItem(STORAGE_KEY, JSON.stringify(seedPayments));
@@ -187,7 +187,7 @@ function recalculateInvoiceStatus(invoiceId, paymentsList) {
   let invoice;
   try {
     invoice = getInvoiceSnapshot(invoiceId);
-  } catch (err) {
+  } catch {
     return;
   }
   const paidAmount = getPaidAmountFromList(paymentsList, invoiceId);
@@ -228,7 +228,7 @@ export function getInvoicePaymentSummaries(invoiceIds = []) {
       let invoice;
       try {
         invoice = getInvoiceSnapshot(invoiceId);
-      } catch (err) {
+      } catch  {
         return;
       }
       const paidAmount = getPaidAmountFromList(payments, invoiceId);
